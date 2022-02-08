@@ -53,7 +53,8 @@ namespace Ref {
         F32 result
     )
   {
-    // TODO
+    this->tlmWrite_RESULT(result);
+    this->log_ACTIVITY_HI_RESULT(result);
   }
 
   // ----------------------------------------------------------------------
@@ -69,7 +70,11 @@ namespace Ref {
         F32 val2
     )
   {
-    // TODO
+    this->tlmWrite_VAL1(val1);
+    this->tlmWrite_OP(op);
+    this->tlmWrite_VAL2(val2);
+    this->log_ACTIVITY_LO_COMMAND_RECV(val1,op,val2);
+    this->mathOpOut_out(0,val1,op,val2);
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
   }
 
