@@ -45,6 +45,15 @@ namespace Ref {
       //! Test an ADD command
       void testAddCommand();
 
+      //! Test an SUB command
+      void testSubCommand();
+
+      //! Test an MUL command
+      void testMulCommand();
+
+      //! Test an DIV command
+      void testDivCommand();
+
     private:
 
       // ----------------------------------------------------------------------

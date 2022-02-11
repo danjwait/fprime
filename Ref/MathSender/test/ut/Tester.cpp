@@ -11,6 +11,7 @@
 // ======================================================================
 
 #include "Tester.hpp"
+#include "STest/Pick/Pick.hpp"
 
 #define INSTANCE 0
 #define MAX_HISTORY_SIZE 10
@@ -50,6 +51,24 @@ namespace Ref {
     testAddCommand()
   {
     this->testDoMath(MathOp::ADD);
+  }
+
+    void Tester :: 
+    testSubCommand()
+  {
+    this->testDoMath(MathOp::SUB);
+  }
+
+    void Tester :: 
+    testMulCommand()
+  {
+    this->testDoMath(MathOp::MUL);
+  }
+
+    void Tester :: 
+    testDivCommand()
+  {
+    this->testDoMath(MathOp::DIV);
   }
 
   // ----------------------------------------------------------------------
