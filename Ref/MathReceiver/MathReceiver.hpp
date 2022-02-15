@@ -87,6 +87,10 @@ namespace Ref {
           const U32 cmdSeq /*!< The command sequence number*/
       );
 
+      void parameterUpdated(
+          const FwPrmIdType id
+      );
+
 
     };
 

@@ -55,7 +55,44 @@ namespace Ref {
         F32 val2
     )
   {
-    // TODO
+    // get the initial result
+    F32 res = 0.0;
+    switch (op.e)
+    {
+    case MathOp::ADD:
+      res = val1 + val2;
+      break;
+    case MathOp::SUB:
+      res = val1 - val2;
+      break;
+    case MathOp::MUL:
+      res = val1 * val2;
+      break;
+    case MathOp::DIV:
+      res = val1/val2;
+      break;
+    default:
+    FW_ASSERT(0, op.e);
+      break;
+    }
+
+    // get the factor value
+    Fw::ParamValid valid;
+    F32 factor = paramGet_FACTOR(valid);
+    FW_ASSERT(
+      valid.e == Fw::ParamValid::VALID || valid.e == Fw::ParamValid::DEFAULT,
+      valid.e
+    );
+
+    // multiply result by factor
+    res *= factor;
+
+    // emit telemetry can events
+    this->log_ACTIVITY_HI_OPERATION_PERFORMED(op);
+    this->tlmWrite_OPERATION(op);
+
+    // emit result
+    this->mathResultOut_out(0,res);
   }
 
   void MathReceiver ::
@@ -64,7 +101,10 @@ namespace Ref {
         NATIVE_UINT_TYPE context
     )
   {
-    // TODO
+    U32 numMsgs = this->m_queue.getNumMsgs();
+    for (U32 i = 0; i < numMsgs; ++i) {
+      (void) this->doDispatch();
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -77,8 +117,34 @@ namespace Ref {
         const U32 cmdSeq
     )
   {
-    // TODO
+    // clear throttle
+    this->log_ACTIVITY_HI_FACTOR_UPDATED_ThrottleClear();
+    // send event that throttle is cleared
+    this->log_ACTIVITY_HI_THROTTLE_CLEARED();
+    // reply wthi completion status
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
+  }
+
+  void MathReceiver ::
+    parameterUpdated(FwPrmIdType id)
+  {
+    switch (id)
+    {
+    case PARAMID_FACTOR: {
+      Fw::ParamValid valid;
+      F32 val = this->paramGet_FACTOR(valid);
+      FW_ASSERT(
+        valid.e == Fw::ParamValid::VALID || valid.e == Fw::ParamValid::DEFAULT,
+        valid.e
+      );
+      this->log_ACTIVITY_HI_FACTOR_UPDATED(val);
+      break;
+
+    }
+    default:
+      FW_ASSERT(0,id);
+      break;
+    }
   }
 
 } // end namespace Ref
