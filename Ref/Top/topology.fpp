@@ -41,6 +41,8 @@ module Ref {
     instance fileUplink
     instance fileUplinkBufferManager
     instance linuxTime
+    instance mathSender
+    instance mathReceiver
     instance pingRcvr
     instance prmDb
     instance rateGroup1Comp
