@@ -36,15 +36,49 @@ module GpsApp {
         output port serialBufferOut: Fw.BufferSend
 
         #-----
+        # parameters
+        #-----
+
+        #-----
+        # events
+        #-----
+
+        @ notification on GPS lock acquired
+        event GPS_LOCK_ACQUIRED \
+        severity activity high \
+        id 0 \
+        format "GPS lock acquired"
+
+        @ warning on GPS lock lost
+        event GPS_LOCK_LOST \
+        severity warning high \
+        id 1 \
+        format "GPS lock lost"
+
+        #-----
         # commands
         #-----
 
-        @ report lock status
-        async command REPORT_STATUS(
-            
-        )
+        @ command to force an EVR reporting lock status
+        async command REPORT_STATUS \
+        opcode 0
+
+        #-----
+        # telemetry
+        #-----
+
+        @ current latitude
+        telemetry GPS_LATITUDE: F32 id 0
+
+        @ current longitude
+        telemetry GPS_LONGITUDE: F32 id 1
+
+        @ current altitude
+        telemetry GPS_ALTITUDE: F32 id 2
+
+        @ current number of satellites
+        telemetry GPS_SV_COUNT: F32 id 3
+
     }
-
-
 
 }
