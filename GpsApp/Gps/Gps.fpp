@@ -23,20 +23,17 @@ module GpsApp {
         @ event port
         event port eventOut
 
-        @ telemetry port
-        telemetry port tlmOut
-
         @ text event port
         text event port textEventOut
 
-        @ time get port
-        time get port timeGetOut
+        @ telemetry port
+        telemetry port tlmOut
 
         @ receive serial data port
-        serial read port serialRecv
+        async input port serialRecv: Drv.SerialRead
 
         @ serial buffer port
-        serial buffer port serialBufferOut
+        output port serialBufferOut: Fw.BufferSend
 
         #-----
         # commands
