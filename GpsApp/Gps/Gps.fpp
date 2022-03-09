@@ -78,7 +78,5 @@ module GpsApp {
 
         @ current number of satellites
         telemetry GPS_SV_COUNT: F32 id 3
-
     }
-
 }
