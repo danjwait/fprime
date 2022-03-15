@@ -26,6 +26,9 @@ module GpsApp {
         @ text event port
         text event port textEventOut
 
+        @ Time get port
+        time get port timeGetOut
+
         @ telemetry port
         telemetry port tlmOut
 
