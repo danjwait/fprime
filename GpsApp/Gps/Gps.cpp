@@ -13,7 +13,7 @@
 
 #include <GpsApp/Gps/Gps.hpp>
 #include "Fw/Types/BasicTypes.hpp"
-#include "Fw/Logger/Logger.hpp" // this was in the Gps tutorial, not the stub
+#include "Fw/Logger/Logger.hpp" // DJW this was in the Gps tutorial, not the stub
 
 #include <cstring>
 
@@ -32,7 +32,7 @@ namespace GpsApp {
   {
 
   }
-  // only added locked status to above
+  // DJW only added locked status to above from stub; tutorial has this as an if
 
   void Gps ::
     init(
@@ -74,14 +74,49 @@ namespace GpsApp {
   // Handler implementations for user-defined typed input ports
   // ----------------------------------------------------------------------
 
+  // Step 1: serialIn
+  //
+  // Impliment a handler to respond to the serial device sending data buffer
+  // containing the GPS data. This will handle the serial message. 
+
   void Gps ::
     serialRecv_handler(
         const NATIVE_INT_TYPE portNum,
-        Fw::Buffer &serBuffer,
-        Drv::SerialReadStatus &status
+        Fw::Buffer &serBuffer, 
+        Drv::SerialReadStatus &status // DJW this reference is differnt in tutorial
     )
   {
-    // TODO DJW stopped here
+    // local variable definitions
+    int status = 0;
+    float lat = 0.0f, lon = 0.0f;
+    GpsPacket packet;
+    // Grab the sice (used amount of buffer) and a pointer to data in buffer
+    U32 buffsize = static_cast<U32>(serBuffer.getSize());
+    char* pointer = reinterpret_cast<char*>(serBuffer.getData());
+
+    // check for invalid read status, log an error, return buffer & abort if there is problem
+    if (serial_status != Drv::SER_OK) {
+      Fw::Logger::logMsg("[WARNING] Received buffer with bad packet: %d\n", serial_status);
+      // Must return the buffer or serial driver won't be able to reuse it.
+      // Same buffer send call from preamble is used; since buffer size was overwritten to
+      // hold the actual data size, need to reset it to full size before returning it.
+      serBuffer.setSize(UART_READ_BUFF_SIZE);
+      this->serialBufferOut_out(0, serBuffer);
+      return;
+    }
+    // If not enough data is available for a full message, return the buffer and abort.
+    else if (buffsize < 24 ) {
+      // Must return the buffer or serial driver won't be able to reuse it.
+      // Same buffer send call from preamble is used; since buffer size was overwritten to
+      // hold the actual data size, need to reset it to full size before returning it.
+      serBuffer.setSize(UART_READ_BUFF_SIZE);
+      this->serialBufferOut_out(0,serBuffer);
+      return;
+    }
+
+    // DJW stopped here
+    // Step 2: parsing
+    
   }
 
   // ----------------------------------------------------------------------
