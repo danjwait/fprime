@@ -114,9 +114,71 @@ namespace GpsApp {
       return;
     }
 
-    // DJW stopped here
     // Step 2: parsing
-    
+    // Parse GPS message from UART. Use standard C functions to read messages into
+    // GPS package struct. If all 9 items parse, break. Else, continue to scan the 
+    // block looking for messages further in
+
+    for (U32 i = 0; i < (buffsize - 24); i++) {
+      status = sscanf(pointer, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f",
+      &packet.utcTime, & packet.dmNS, &packet.northSouth,
+      &packet.dmEW, &packet.eastWest, &packet.lock,
+      &packet.count, &packet.filler, &packet.altitude);
+      // break when all GPS items are found
+      if (status == 9) {
+        break;
+      }
+      pointer = pointer +1;
+    }
+    // If failed to find GPGGA then return buffer and abort
+    if (status ==0) {
+      // Must return the buffer or serial driver won't be able to reuse it.
+      // Same buffer send call from preamble is used; since buffer size was overwritten to
+      // hold the actual data size, need to reset it to full size before returning it.
+      serBuffer.setSize(UART_READ_BUFF_SIZE);
+      this->serialBufferOut_out(0,serBuffer);
+    }
+    // if found an incomplete message log error, return butter, and abort
+    else if (status != 9) {
+      Fw::Logger::logMsg("[ERROR] GPS parsing failed: %d\n", status);
+      // Must return the buffer or serial driver won't be able to reuse it.
+      // Same buffer send call from preamble is used; since buffer size was overwritten to
+      // hold the actual data size, need to reset it to full size before returning it.
+      serBuffer.setSize(UART_READ_BUFF_SIZE);
+      this->serialBufferOut_out(0,serBuffer);
+    }
+    // GPS packet locations are of format ddmm.mmmm
+    // Convert to lat/lon in decimal degrees
+    // Latitude degrees, and minutes converted to degrees & multiply by direction
+    lat = (U32)(packet.dmNS/100.0f);
+    lat = lat + (packet.dmNS - (lat * 100.0f))/60.0f;
+    lat = lat * ((packet.northSouth == 'N') ? 1 : -1);
+    // Longitude degrees, and minutes converted to degrees & multiply by direction
+    lon = (U32)(packet.dmEW/100.0f);
+    lon = lon + (packet.dmEW - (lon * 100.0f))/60.0f;
+    lon = lon * ((packet.eastWest == 'E') ? 1 : -1);
+
+    // Step 4: generate telemetry
+    tlmWrite_Gps_Latitude(lat);
+    tlmWrite_Gps_Longitude(lon);
+    timWrite_Gps_Altitude(packet.altitude);
+    tlmWrite_Gps_Count(packet.count);
+    tlmWrite_Gps_LockStatus(packet.lock);
+
+    // Step 5: lock status
+    // Only generate lock status event on change
+    if (packet.lock == 0 && m_locked) {
+      m_locked = false;
+      log_WARNING_HI_Gps_LockLost();
+    } else if (packet.lock == 1 && !m_locked) {
+      m_locked = true;
+      log_ACTIVITY_HI_Gps_LockAcquired();
+    }
+    // Must return the buffer or serial driver won't be able to reuse it.
+    // Same buffer send call from preamble is used; since buffer size was overwritten to
+    // hold the actual data size, need to reset it to full size before returning it.
+    serBuffer.setSize(UART_READ_BUFF_SIZE);
+    this->serialBufferOut_out(0,serBuffer);
   }
 
   // ----------------------------------------------------------------------
@@ -129,7 +191,13 @@ namespace GpsApp {
         const U32 cmdSeq
     )
   {
-    // TODO
+    // Locked-force print
+    if (m_locked) {
+      log_ACTIVITY_HI_Gps_LockAquired();
+    } else {
+      log_WARNING_HI_Gps_LockLost();
+    }
+    // Step 9: complete command
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
   }
 
