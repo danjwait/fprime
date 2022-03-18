@@ -13,7 +13,7 @@
 #ifndef Gps_HPP
 #define Gps_HPP
 
-#include "GpsApp/Gps/GpsComponentAc.hpp"
+#include "GpsApp/Gps/Gps.hpp"
 
 // Define memory footprint of buffers
 // Define a count of buffers & size of each.
@@ -42,7 +42,7 @@ namespace GpsApp {
       unsigned int count;
       float filler;
       float altitude;
-    }
+    };
 
     public:
 
