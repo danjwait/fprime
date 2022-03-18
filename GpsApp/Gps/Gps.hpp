@@ -53,7 +53,11 @@ namespace GpsApp {
       //! Construct object Gps
       //!
       Gps(
+#if FW_OBJECT_NAMES == 1
           const char *const compName /*!< The component name*/
+#else
+          void
+#endif
       );
 
       //! Initialize object Gps
@@ -107,7 +111,7 @@ namespace GpsApp {
       // that those buffers use for storage
       Fw::Buffer m_recvBuffers[NUM_UART_BUFFERS];
       BYTE m_uartBuffers[NUM_UART_BUFFERS][UART_READ_BUFF_SIZE];
-    };
+  };
 
 } // end namespace GpsApp
 

@@ -24,9 +24,14 @@ namespace GpsApp {
   // ----------------------------------------------------------------------
 
   Gps ::
+#if FW_OBJECT_NAMES == 1
     Gps(
         const char *const compName
-    ) : GpsComponentBase(compName)
+    ) :
+      GpsComponentBase(compName),
+#else
+      GpsComponentBase(),
+#endif
     // initialize the lock to "false"
     m_locked(false)
   {
