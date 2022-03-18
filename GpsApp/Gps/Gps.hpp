@@ -15,11 +15,34 @@
 
 #include "GpsApp/Gps/GpsComponentAc.hpp"
 
+// Define memory footprint of buffers
+// Define a count of buffers & size of each.
+// Allow Gps component to manage its own buffers
+
+#define NUM_UART_BUFFERS 20
+#define UART_READ_BUFF_SIZE 1024
+
 namespace GpsApp {
 
   class Gps :
     public GpsComponentBase
   {
+    /**
+     * @brief GpsPacket:
+     * A structured containing the information in the GPS location packet
+     * received via a NEMA GPS receiver
+     */
+    struct GpsPacket {
+      float utcTime;
+      float dmNS;
+      char northSouth;
+      float dmEW;
+      char eastWest;
+      unsigned int lock;
+      unsigned int count;
+      float filler;
+      float altitude;
+    }
 
     public:
 
@@ -39,6 +62,10 @@ namespace GpsApp {
           const NATIVE_INT_TYPE queueDepth, /*!< The queue depth*/
           const NATIVE_INT_TYPE instance = 0 /*!< The instance number*/
       );
+
+      //! Preamble
+      //!
+      void preamble();
 
       //! Destroy object Gps
       //!
@@ -74,8 +101,12 @@ namespace GpsApp {
           const FwOpcodeType opCode, /*!< The opcode*/
           const U32 cmdSeq /*!< The command sequence number*/
       );
-
-
+      //!< Has deviced acquired GPS lock?
+      bool m_locked;
+      //!< Create member variables to store buffers and data array
+      // that those buffers use for storage
+      Fw::Buffer m_recvBuffers[NUM_UART_BUFFERS];
+      BYTE m_uartBuffers[NUM_UART_BUFFERS][UART_READ_BUFF_SIZE];
     };
 
 } // end namespace GpsApp
