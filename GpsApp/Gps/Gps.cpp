@@ -62,7 +62,8 @@ namespace GpsApp {
     for (NATIVE_INT_TYPE buffer =0; buffer < NUM_UART_BUFFERS; buffer ++) {
       // Assign the raw data to the buffer. Make sure to include the side
       // of the region assigned.
-      this->m_recvBuffers[buffer].setData((U64)this->m_uartBuffers[buffer]);
+      //this->m_recvBuffers[buffer].setData((U64)this->m_uartBuffers[buffer]);
+      this->m_recvBuffers[buffer].setData((U8*)this->m_uartBuffers[buffer]);
       this->m_recvBuffers[buffer].setSize(UART_READ_BUFF_SIZE);
       // Invoke the port to send the buffer out
       this->serialBufferOut_out(0,this->m_recvBuffers[buffer]);
@@ -88,7 +89,7 @@ namespace GpsApp {
     serialRecv_handler(
         const NATIVE_INT_TYPE portNum,
         Fw::Buffer &serBuffer, 
-        Drv::SerialReadStatus &status // DJW this reference is differnt in tutorial
+        Drv::SerialReadStatus &serial_status // DJW this reference is differnt in tutorial
     )
   {
     // local variable definitions
@@ -100,8 +101,9 @@ namespace GpsApp {
     char* pointer = reinterpret_cast<char*>(serBuffer.getData());
 
     // check for invalid read status, log an error, return buffer & abort if there is problem
-    if (serial_status != Drv::SER_OK) {
-      Fw::Logger::logMsg("[WARNING] Received buffer with bad packet: %d\n", serial_status);
+    // FPP v.3.0 change here:
+    if (serial_status != Drv::SerialReadStatus::SER_OK) {
+      //Fw::Logger::logMsg("[WARNING] Received buffer with bad packet: %d\n", serial_status); DJW
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
@@ -165,10 +167,10 @@ namespace GpsApp {
 
     // Step 4: generate telemetry
     tlmWrite_Gps_Latitude(lat);
-    tlmWrite_Gps_Longitude(lon);
-    timWrite_Gps_Altitude(packet.altitude);
-    tlmWrite_Gps_Count(packet.count);
-    tlmWrite_Gps_LockStatus(packet.lock);
+    this->tlmWrite_Gps_Longitude(lon);
+    this->timWrite_Gps_Altitude(packet.altitude);
+    this->tlmWrite_Gps_Count(packet.count);
+    this->tlmWrite_Gps_LockStatus(packet.lock);
 
     // Step 5: lock status
     // Only generate lock status event on change
