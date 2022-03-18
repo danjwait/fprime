@@ -166,20 +166,20 @@ namespace GpsApp {
     lon = lon * ((packet.eastWest == 'E') ? 1 : -1);
 
     // Step 4: generate telemetry
-    tlmWrite_Gps_Latitude(lat);
-    this->tlmWrite_Gps_Longitude(lon);
-    this->timWrite_Gps_Altitude(packet.altitude);
-    this->tlmWrite_Gps_Count(packet.count);
-    this->tlmWrite_Gps_LockStatus(packet.lock);
+    this->tlmWrite_GPS_LATITUDE(lat);
+    this->tlmWrite_GPS_LONGITUDE(lon);
+    this->tlmWrite_GPS_ALTITUDE(packet.altitude);
+    this->tlmWrite_GPS_SV_COUNT(packet.count);
+    this->tlmWrite_GPS_LOCK_STATUS(packet.lock);
 
     // Step 5: lock status
     // Only generate lock status event on change
     if (packet.lock == 0 && m_locked) {
       m_locked = false;
-      log_WARNING_HI_Gps_LockLost();
+      log_WARNING_HI_GPS_LOCK_LOST();
     } else if (packet.lock == 1 && !m_locked) {
       m_locked = true;
-      log_ACTIVITY_HI_Gps_LockAcquired();
+      log_ACTIVITY_HI_GPS_LOCK_ACQUIRED();
     }
     // Must return the buffer or serial driver won't be able to reuse it.
     // Same buffer send call from preamble is used; since buffer size was overwritten to
@@ -200,9 +200,9 @@ namespace GpsApp {
   {
     // Locked-force print
     if (m_locked) {
-      log_ACTIVITY_HI_Gps_LockAquired();
+      log_ACTIVITY_HI_GPS_LOCK_ACQUIRED();
     } else {
-      log_WARNING_HI_Gps_LockLost();
+      log_WARNING_HI_GPS_LOCK_LOST();
     }
     // Step 9: complete command
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
