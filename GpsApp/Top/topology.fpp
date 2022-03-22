@@ -55,6 +55,8 @@ module Ref {
     instance textLogger
     instance uplink
     instance systemResources
+    instance linuxSerialDriver
+    instance gps
 
     # ----------------------------------------------------------------------
     # Pattern graph specifiers

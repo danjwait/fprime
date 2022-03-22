@@ -1,4 +1,4 @@
-module Ref {
+module GpsApp {
 
   # ----------------------------------------------------------------------
   # Defaults
@@ -186,10 +186,15 @@ module Ref {
 
   }
 
-  instance mathSender: Ref.MathSender base id 0xE00 \
+  instance mathSender: Ref.MathSender base id 0x0E00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
     priority 100
+
+  instance gps: GpsApp.Gps base id 0x0F00 \
+  queue size Default.queueSize \
+  stack size Default.stackSize \
+  priority 100
 
   # ----------------------------------------------------------------------
   # Queued component instances
@@ -372,5 +377,12 @@ module Ref {
   }
 
   instance systemResources: Svc.SystemResources base id 0x4B00
+
+  instance linuxSerialDriver: Drv.LinuxSerialDriverModel base id 0x4C00 \
+    at "../../Drv/LinuxSerialDriver/LinuxSerialDriver.hpp" \
+  {
+
+
+  }
 
 }
