@@ -1,4 +1,4 @@
-module Ref {
+module GpsApp {
 
   # ----------------------------------------------------------------------
   # Symbolic constants for port numbers
@@ -15,7 +15,7 @@ module Ref {
       uplink
     }
 
-  topology Ref {
+  topology GpsApp {
 
     # ----------------------------------------------------------------------
     # Instances used in the topology
@@ -55,7 +55,7 @@ module Ref {
     instance textLogger
     instance uplink
     instance systemResources
-    instance linuxSerialDriver
+    instance gpsSerial
     instance gps
 
     # ----------------------------------------------------------------------

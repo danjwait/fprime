@@ -1,12 +1,12 @@
-#ifndef RefTopologyDefs_HPP
-#define RefTopologyDefs_HPP
+#ifndef GpsAppTopologyDefs_HPP
+#define GpsAppTopologyDefs_HPP
 
 #include "Drv/BlockDriver/BlockDriver.hpp"
 #include "Fw/Types/MallocAllocator.hpp"
-#include "Ref/Top/FppConstantsAc.hpp"
+#include "GpsApp/Top/FppConstantsAc.hpp"
 #include "Svc/FramingProtocol/FprimeProtocol.hpp"
 
-namespace Ref {
+namespace GpsApp {
 
   // Declare the block driver here so it is visible in main
   extern Drv::BlockDriver blockDrv;

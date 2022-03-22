@@ -192,9 +192,12 @@ module GpsApp {
     priority 100
 
   instance gps: GpsApp.Gps base id 0x0F00 \
-  queue size Default.queueSize \
-  stack size Default.stackSize \
-  priority 100
+    queue size Default.queueSize \
+    stack size Default.stackSize \
+    priority 100 \
+  {
+
+  }
 
   # ----------------------------------------------------------------------
   # Queued component instances
@@ -378,7 +381,7 @@ module GpsApp {
 
   instance systemResources: Svc.SystemResources base id 0x4B00
 
-  instance linuxSerialDriver: Drv.LinuxSerialDriverModel base id 0x4C00 \
+  instance gpsSerial: Drv.LinuxSerialDriver base id 0x4C00 \
     at "../../Drv/LinuxSerialDriver/LinuxSerialDriver.hpp" \
   {
 

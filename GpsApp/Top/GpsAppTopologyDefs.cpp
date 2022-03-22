@@ -1,6 +1,6 @@
-#include "Ref/Top/RefTopologyDefs.hpp"
+#include "GpsApp/Top/GpsAppTopologyDefs.hpp"
 
-namespace Ref {
+namespace GpsApp {
 
   namespace Allocation {
 
