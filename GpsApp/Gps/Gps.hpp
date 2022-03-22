@@ -13,7 +13,8 @@
 #ifndef Gps_HPP
 #define Gps_HPP
 
-#include "GpsApp/Gps/Gps.hpp"
+//#include "GpsApp/Gps/Gps.hpp"
+#include "GpsApp/Gps/GpsComponentAc.hpp"
 
 // Define memory footprint of buffers
 // Define a count of buffers & size of each.
@@ -25,8 +26,9 @@
 namespace GpsApp {
 
   class Gps :
-    public GpsComponentBase
+   public GpsComponentBase
   {
+
     /**
      * @brief GpsPacket:
      * A structured containing the information in the GPS location packet
