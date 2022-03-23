@@ -111,6 +111,7 @@ module GpsApp {
       rateGroup1Comp.RateGroupMemberOut[3] -> fileDownlink.Run
       rateGroup1Comp.RateGroupMemberOut[4] -> systemResources.run
       rateGroup1Comp.RateGroupMemberOut[5] -> mathReceiver.schedIn
+      rateGroup1Comp.RateGroupMemberOut[6] -> uplink.schedIn
 
       # Rate group 2
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2Comp.CycleIn
@@ -157,6 +158,11 @@ module GpsApp {
     connections Math {
       mathSender.mathOpOut -> mathReceiver.mathOpIn
       mathReceiver.mathResultOut -> mathSender.mathResultIn
+    }
+
+    connections Gps {
+      gpsSerial.serialRecv -> gps.serialRecv
+      gps.serialBufferOut -> gpsSerial.readBufferSend
     }
 
   }

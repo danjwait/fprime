@@ -7,12 +7,7 @@ Topology GpsApp.GpsApp:
   GpsApp.comm.ready
   GpsApp.fileDownlink.FileComplete
   GpsApp.fileDownlink.SendFile
-  GpsApp.gps.serialBufferOut
-  GpsApp.gps.serialRecv
-  GpsApp.gpsSerial.readBufferSend
-  GpsApp.gpsSerial.serialRecv
   GpsApp.gpsSerial.serialSend
   GpsApp.health.WdogStroke
   GpsApp.uplink.framedPoll
-  GpsApp.uplink.schedIn
 
