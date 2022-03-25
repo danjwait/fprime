@@ -7,6 +7,9 @@ module GpsApp {
         # general ports
         #-----
 
+        @ the rate group scheduler input
+        sync input port schedIn: Svc.Sched
+        
         #-----
         # special ports
         #-----
