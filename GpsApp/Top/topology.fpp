@@ -43,6 +43,8 @@ module GpsApp {
     instance linuxTime
     instance mathSender
     instance mathReceiver
+    instance gpsSerial
+    instance gps
     instance pingRcvr
     instance prmDb
     instance rateGroup1Comp
@@ -55,8 +57,7 @@ module GpsApp {
     instance textLogger
     instance uplink
     instance systemResources
-    instance gpsSerial
-    instance gps
+
 
     # ----------------------------------------------------------------------
     # Pattern graph specifiers
@@ -111,7 +112,7 @@ module GpsApp {
       rateGroup1Comp.RateGroupMemberOut[3] -> fileDownlink.Run
       rateGroup1Comp.RateGroupMemberOut[4] -> systemResources.run
       rateGroup1Comp.RateGroupMemberOut[5] -> mathReceiver.schedIn
-      rateGroup1Comp.RateGroupMemberOut[6] -> gps.schedIn
+      rateGroup1Comp.RateGroupMemberOut[6] -> uplink.schedIn
 
       # Rate group 2
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2Comp.CycleIn
