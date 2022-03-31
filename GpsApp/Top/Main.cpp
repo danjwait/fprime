@@ -45,10 +45,12 @@ int main(int argc, char* argv[]) {
     U32 port_number = 0; // Invalid port number forced
     I32 option;
     char *hostname;
+    char *device;
     option = 0;
     hostname = nullptr;
+    device = nullptr;
 
-    while ((option = getopt(argc, argv, "hp:a:")) != -1){
+    while ((option = getopt(argc, argv, "hp:a:d:")) != -1){
         switch(option) {
             case 'h':
                 print_usage(argv[0]);
@@ -60,6 +62,9 @@ int main(int argc, char* argv[]) {
             case 'a':
                 hostname = optarg;
                 break;
+            case 'd':
+                device = optarg;
+                break;
             case '?':
                 return 1;
             default:
@@ -70,7 +75,7 @@ int main(int argc, char* argv[]) {
 
     (void) printf("Hit Ctrl-C to quit\n");
 
-    state = GpsApp::TopologyState(hostname, port_number);
+    state = GpsApp::TopologyState(hostname, port_number,device);
     GpsApp::setup(state);
 
     // register signal handlers to exit program

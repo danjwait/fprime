@@ -22,21 +22,25 @@ namespace GpsApp {
   struct TopologyState {
     TopologyState() :
       hostName(""),
-      portNumber(0)
+      portNumber(0),
+      device("")
     {
 
     }
     TopologyState(
         const char *hostName,
-        U32 portNumber
+        U32 portNumber,
+        const char *device
     ) :
       hostName(hostName),
-      portNumber(portNumber)
+      portNumber(portNumber),
+      device(device)
     {
 
     }
     const char* hostName;
     U32 portNumber;
+    const char *device;
   };
 
   // Health ping entries
