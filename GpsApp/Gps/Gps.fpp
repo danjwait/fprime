@@ -6,9 +6,6 @@ module GpsApp {
         #-----
         # general ports
         #-----
-
-        #@ the rate group scheduler input
-        #sync input port schedIn: Svc.Sched
         
         #-----
         # special ports
@@ -83,7 +80,7 @@ module GpsApp {
         telemetry GPS_ALTITUDE: F32 id 2
 
         @ current number of satellites
-        telemetry GPS_SV_COUNT: F32 id 3
+        telemetry GPS_SV_COUNT: U32 id 3
 
         @ current lock status
         telemetry GPS_LOCK_STATUS: U32 id 4
