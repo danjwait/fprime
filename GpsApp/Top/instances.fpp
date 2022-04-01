@@ -381,8 +381,15 @@ module GpsApp {
   instance gpsSerial: Drv.LinuxSerialDriver base id 0x4C00 \
     at "../../Drv/LinuxSerialDriver/LinuxSerialDriver.hpp" \
   {
-
-
+    phase Fpp.ToCpp.Phases.startTasks """
+    gpsSerial.open(
+      state.device,
+      BAUD_9600,
+      NO_FLOW,
+      PARITY_NONE,
+      false
+    );
+    """
   }
 
 }
