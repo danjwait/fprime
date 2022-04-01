@@ -6,7 +6,12 @@ module GpsApp {
         #-----
         # general ports
         #-----
-        
+        @ The ping input port
+        async input port PingIn: Svc.Ping
+
+        @ The ping input port
+        output port PingOut: Svc.Ping
+
         #-----
         # special ports
         #-----
@@ -26,7 +31,7 @@ module GpsApp {
         @ text event port
         text event port textEventOut
 
-        @ Time get port
+        @ time get port
         time get port timeGetOut
 
         @ telemetry port
