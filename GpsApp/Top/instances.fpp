@@ -384,9 +384,9 @@ module GpsApp {
     phase Fpp.ToCpp.Phases.startTasks """
     gpsSerial.open(
       state.device,
-      BAUD_9600,
-      NO_FLOW,
-      PARITY_NONE,
+      Drv::LinuxSerialDriverComponentImpl::BAUD_RATE::BAUD_9600,
+      Drv::LinuxSerialDriverComponentImpl::FLOW_CONTROL::NO_FLOW,
+      Drv::LinuxSerialDriverComponentImpl::PARITY::PARITY_NONE,
       false
     );
     """
