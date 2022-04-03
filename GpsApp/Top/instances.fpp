@@ -389,6 +389,11 @@ module GpsApp {
       Drv::LinuxSerialDriverComponentImpl::PARITY::PARITY_NONE,
       false
     );
+    gpsSerial.startReadThread(
+      Os::Task::TASK_DEFAULT,
+      Os::Task::TASK_DEFAULT,
+      Os::Task::TASK_DEFAULT
+    );
     """
   }
 
