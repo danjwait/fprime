@@ -89,7 +89,7 @@ namespace GpsApp {
     serialRecv_handler(
         const NATIVE_INT_TYPE portNum,
         Fw::Buffer &serBuffer, 
-        Drv::SerialReadStatus &serial_status // DJW this reference is differnt in tutorial
+        Drv::SerialReadStatus &serial_status // DJW this reference is different in tutorial
     )
   {
     // local variable definitions
@@ -103,7 +103,7 @@ namespace GpsApp {
     // check for invalid read status, log an error, return buffer & abort if there is problem
     // FPP v.3.0 change here:
     if (serial_status != Drv::SerialReadStatus::SER_OK) {
-      //Fw::Logger::logMsg("[WARNING] Received buffer with bad packet: %d\n", serial_status); DJW
+      Fw::Logger::logMsg("[WARNING] Received buffer with bad packet"); //: %d\n", serial_status); // DJW
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
@@ -116,6 +116,7 @@ namespace GpsApp {
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
+      Fw::Logger::logMsg("[WARNING] Unfull message buffer: %d\n", buffsize); // DJW debug
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
       return;
@@ -127,8 +128,8 @@ namespace GpsApp {
     // block looking for messages further in
 
     for (U32 i = 0; i < (buffsize - 24); i++) {
-      status = sscanf(pointer, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f",
-      &packet.utcTime, & packet.dmNS, &packet.northSouth,
+      status = sscanf(pointer, "$GNGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f",
+      &packet.utcTime, &packet.dmNS, &packet.northSouth,
       &packet.dmEW, &packet.eastWest, &packet.lock,
       &packet.count, &packet.filler, &packet.altitude);
       // break when all GPS items are found
@@ -136,18 +137,20 @@ namespace GpsApp {
         break;
       }
       pointer = pointer +1;
+      Fw::Logger::logMsg("[STATUS] GPS parsing in work: %d\n", *pointer); // DJW debug
     }
     // If failed to find GPGGA then return buffer and abort
     if (status ==0) {
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
+      Fw::Logger::logMsg("[ERROR] did not find GNGGA status: %d\n", status); // DJW debug
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
     }
     // if found an incomplete message log error, return butter, and abort
     else if (status != 9) {
-      Fw::Logger::logMsg("[ERROR] GPS parsing failed: %d\n", status);
+      Fw::Logger::logMsg("[ERROR] GPS parsing incomplete status: %d\n", status); // DJW debug
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
