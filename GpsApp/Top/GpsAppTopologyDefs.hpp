@@ -3,6 +3,7 @@
 
 #include "Drv/BlockDriver/BlockDriver.hpp"
 #include "Fw/Types/MallocAllocator.hpp"
+#include "Fw/Logger/Logger.hpp"
 #include "GpsApp/Top/FppConstantsAc.hpp"
 #include "Svc/FramingProtocol/FprimeProtocol.hpp"
 
@@ -15,6 +16,13 @@ namespace GpsApp {
 
     // Malloc allocator for topology construction
     extern Fw::MallocAllocator mallocator;
+
+  }
+
+  namespace Init {
+
+    // Initialization status
+    extern bool status;
 
   }
 
