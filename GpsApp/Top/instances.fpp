@@ -379,21 +379,33 @@ module GpsApp {
   instance systemResources: Svc.SystemResources base id 0x4B00
 
   instance gpsSerial: Drv.LinuxSerialDriver base id 0x4C00 \
-    at "../../Drv/LinuxSerialDriver/LinuxSerialDriver.hpp" \
   {
-    phase Fpp.ToCpp.Phases.startTasks """
-    gpsSerial.open(
+    phase Fpp.ToCpp.Phases.configComponents  """
+    const bool status = gpsSerial.open(
       state.device,
-      Drv::LinuxSerialDriverComponentImpl::BAUD_RATE::BAUD_9600,
-      Drv::LinuxSerialDriverComponentImpl::FLOW_CONTROL::NO_FLOW,
-      Drv::LinuxSerialDriverComponentImpl::PARITY::PARITY_NONE,
-      false
+      Drv::LinuxSerialDriverComponentImpl::BAUD_9600,
+      Drv::LinuxSerialDriverComponentImpl::NO_FLOW,
+      Drv::LinuxSerialDriverComponentImpl::PARITY_NONE,
+      true
     );
-    gpsSerial.startReadThread(
-      Os::Task::TASK_DEFAULT,
-      Os::Task::TASK_DEFAULT,
-      Os::Task::TASK_DEFAULT
-    );
+    if (!status) {
+      Fw::Logger::logMsg("[ERROR] Could not open UART driver\\n");
+      Init::status = false;
+      }
+    }
+    """
+    
+    phase Fpp.ToCpp.Phases.startTasks """
+    if (Init::status) {
+      uartDrv.startReadThread();
+    }
+    else {
+      Fw::Logger::logMsg("[ERROR] Initialization failed; not starting UART driver\\n");
+    }
+    """
+
+    phase Fpp.ToCpp.Phases.stopTasks """
+    uartDrv.quitReadThread();
     """
   }
 
