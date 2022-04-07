@@ -54,8 +54,8 @@ namespace GpsApp {
   // This code will loop through our member variables holding buffers 
   // and send them to the linux serial driver. 'preamble' is 
   // automatically called after the system is constructed, before the 
-  // system runs at steady-stte. This allows for initialization code 
-  // whihc invokes working ports
+  // system runs at steady-state. This allows for initialization code 
+  // which invokes working ports
 
   void Gps :: preamble()
   {
@@ -150,7 +150,7 @@ namespace GpsApp {
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
     }
-    // if found an incomplete message log error, return butter, and abort
+    // if found an incomplete message log error, return buffer, and abort
     else if (status != 9) {
       Fw::Logger::logMsg("[ERROR] GPS parsing incomplete status: %d\n", status); // DJW debug
       // Must return the buffer or serial driver won't be able to reuse it.
