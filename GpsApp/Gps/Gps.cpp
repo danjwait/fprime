@@ -139,7 +139,11 @@ namespace GpsApp {
         break;
       }
       pointer = pointer +1;
-      Fw::Logger::logMsg("[STATUS] GPS parsing in work: %d\n", *pointer); // DJW debug
+      if (status >= 1) {
+        Fw::Logger::logMsg("[STATUS] GPS parsing in work: %d\n", *pointer); // DJW debug
+        Fw::Logger::logMsg("[STATUS] GPS parsing in work: %s\n", *&packet.utcTime); // DJW debug
+      }
+      
     }
     // If failed to find GPGGA then return buffer and abort
     if (status ==0) {
