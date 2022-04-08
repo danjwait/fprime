@@ -111,7 +111,7 @@ namespace GpsApp {
       this->serialBufferOut_out(0, serBuffer);
       return;
     }
-    /*
+    
     // If not enough data is available for a full message, return the buffer and abort.
     else if (buffsize < 24 ) {
       // Must return the buffer or serial driver won't be able to reuse it.
@@ -122,7 +122,7 @@ namespace GpsApp {
       this->serialBufferOut_out(0,serBuffer);
       return;
     }
-    */
+    
 
     // Step 2: parsing
     // Parse GPS message from UART. Use standard C functions to read messages into
@@ -139,10 +139,12 @@ namespace GpsApp {
         break;
       }
       pointer = pointer +1;
-      if (status >= 1) {
+      /*
+      if (status > 1) {
         Fw::Logger::logMsg("[STATUS] GPS parsing in work: %d\n", *pointer); // DJW debug
         Fw::Logger::logMsg("[STATUS] GPS parsing in work: %s\n", *&packet.utcTime); // DJW debug
       }
+      */
       
     }
     // If failed to find GPGGA then return buffer and abort
