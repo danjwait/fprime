@@ -19,7 +19,7 @@ module GpsApp {
   instance blockDrv: Drv.BlockDriver base id 0x0100 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 140 \
+    priority 99 \
   {
 
     phase Fpp.ToCpp.Phases.instances """
@@ -31,7 +31,7 @@ module GpsApp {
   instance rateGroup1Comp: Svc.ActiveRateGroup base id 0x0200 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 120 \
+    priority 99 \
   {
 
     phase Fpp.ToCpp.Phases.configObjects """
@@ -51,7 +51,7 @@ module GpsApp {
   instance rateGroup2Comp: Svc.ActiveRateGroup base id 0x0300 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 119 \
+    priority 99 \
   {
 
     phase Fpp.ToCpp.Phases.configObjects """
@@ -71,7 +71,7 @@ module GpsApp {
   instance rateGroup3Comp: Svc.ActiveRateGroup base id 0x0400 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 118 \
+    priority 99 \
   {
 
     phase Fpp.ToCpp.Phases.configObjects """
@@ -91,12 +91,12 @@ module GpsApp {
   instance cmdDisp: Svc.CommandDispatcher base id 0x0500 \
     queue size 20 \
     stack size Default.stackSize \
-    priority 101
+    priority 90
 
   instance cmdSeq: Svc.CmdSequencer base id 0x0600 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 100 \
+    priority 99 \
   {
 
     phase Fpp.ToCpp.Phases.configConstants """
@@ -122,7 +122,7 @@ module GpsApp {
   instance fileDownlink: Svc.FileDownlink base id 0x0700 \
     queue size 30 \
     stack size Default.stackSize \
-    priority 100 \
+    priority 90 \
   {
 
     phase Fpp.ToCpp.Phases.configConstants """
@@ -148,17 +148,17 @@ module GpsApp {
   instance fileManager: Svc.FileManager base id 0x0800 \
     queue size 30 \
     stack size Default.stackSize \
-    priority 100
+    priority 90
 
   instance fileUplink: Svc.FileUplink base id 0x0900 \
     queue size 30 \
     stack size Default.stackSize \
-    priority 100
+    priority 90
 
   instance pingRcvr: Ref.PingReceiver base id 0x0A00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 100
+    priority 90
 
   instance eventLogger: Svc.ActiveLogger base id 0x0B00 \
     queue size Default.queueSize \
@@ -189,12 +189,12 @@ module GpsApp {
   instance mathSender: Ref.MathSender base id 0x0E00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 100
+    priority 90
 
   instance gps: GpsApp.Gps base id 0x0F00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 100
+    priority 90
 
   # ----------------------------------------------------------------------
   # Queued component instances
@@ -257,7 +257,7 @@ module GpsApp {
 
     phase Fpp.ToCpp.Phases.configConstants """
     enum {
-      PRIORITY = 100,
+      PRIORITY = 99,
       STACK_SIZE = Default::stackSize
     };
     """
