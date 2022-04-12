@@ -117,7 +117,7 @@ namespace GpsApp {
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
-      Fw::Logger::logMsg("[WARNING] Unfull message buffer: %d\n", buffsize); // DJW debug
+      //Fw::Logger::logMsg("[WARNING] Unfull message buffer: %d\n", buffsize); // DJW debug
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
       return;
@@ -152,13 +152,13 @@ namespace GpsApp {
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
-      Fw::Logger::logMsg("[ERROR] did not find GNGGA status: %d\n", status); // DJW debug
+      //Fw::Logger::logMsg("[ERROR] did not find GNGGA status: %d\n", status); // DJW debug
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
     }
     // if found an incomplete message log error, return buffer, and abort
     else if (status != 9) {
-      Fw::Logger::logMsg("[ERROR] GPS parsing incomplete status: %d\n", status); // DJW debug
+      //Fw::Logger::logMsg("[ERROR] GPS parsing incomplete status: %d\n", status); // DJW debug
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
@@ -171,10 +171,16 @@ namespace GpsApp {
     lat = (U32)(packet.dmNS/100.0f);
     lat = lat + (packet.dmNS - (lat * 100.0f))/60.0f;
     lat = lat * ((packet.northSouth == 'N') ? 1 : -1);
+    lat = 42.32;
     // Longitude degrees, and minutes converted to degrees & multiply by direction
     lon = (U32)(packet.dmEW/100.0f);
     lon = lon + (packet.dmEW - (lon * 100.0f))/60.0f;
     lon = lon * ((packet.eastWest == 'E') ? 1 : -1);
+    lon = 42.42;
+    packet.altitude = 42.42;
+    packet.count = 42;
+    packet.lock = 1;
+
 
     // Step 4: generate telemetry
     this->tlmWrite_GPS_LATITUDE(lat);
