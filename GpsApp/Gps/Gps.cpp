@@ -63,7 +63,7 @@ namespace GpsApp {
       // Assign the raw data to the buffer. Make sure to include the side
       // of the region assigned.
       //this->m_recvBuffers[buffer].setData((U64)this->m_uartBuffers[buffer]);
-      this->m_recvBuffers[buffer].setData((U8*)this->m_uartBuffers[buffer]);
+      this->m_recvBuffers[buffer].setData(this->m_uartBuffers[buffer]);
       this->m_recvBuffers[buffer].setSize(UART_READ_BUFF_SIZE);
       // Invoke the port to send the buffer out
       this->serialBufferOut_out(0,this->m_recvBuffers[buffer]);
