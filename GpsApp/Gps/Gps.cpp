@@ -96,7 +96,8 @@ namespace GpsApp {
     int status = 0;
     float lat = 0.0f, lon = 0.0f;
     GpsPacket packet;
-    // Grab the sice (used amount of buffer) and a pointer to data in buffer
+
+    // Grab the size (used amount of buffer) and a pointer to data in buffer
     U32 buffsize = static_cast<U32>(serBuffer.getSize());
     char* pointer = reinterpret_cast<char*>(serBuffer.getData());
 
@@ -111,7 +112,6 @@ namespace GpsApp {
       this->serialBufferOut_out(0, serBuffer);
       return;
     }
-    
     // If not enough data is available for a full message, return the buffer and abort.
     else if (buffsize < 24 ) {
       // Must return the buffer or serial driver won't be able to reuse it.
@@ -123,12 +123,10 @@ namespace GpsApp {
       return;
     }
     
-
     // Step 2: parsing
     // Parse GPS message from UART. Use standard C functions to read messages into
     // GPS package struct. If all 9 items parse, break. Else, continue to scan the 
     // block looking for messages further in
-
     for (U32 i = 0; i < (buffsize - 24); i++) {
       status = sscanf(pointer, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f",
       &packet.utcTime, &packet.dmNS, &packet.northSouth,
@@ -139,14 +137,8 @@ namespace GpsApp {
         break;
       }
       pointer = pointer +1;
-      /*
-      if (status > 1) {
-        Fw::Logger::logMsg("[STATUS] GPS parsing in work: %d\n", *pointer); // DJW debug
-        Fw::Logger::logMsg("[STATUS] GPS parsing in work: %s\n", *&packet.utcTime); // DJW debug
-      }
-      */
-      
     }
+
     // If failed to find GPGGA then return buffer and abort
     if (status ==0) {
       // Must return the buffer or serial driver won't be able to reuse it.
@@ -156,7 +148,7 @@ namespace GpsApp {
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
     }
-    // if found an incomplete message log error, return buffer, and abort
+    // If found an incomplete message log error, return buffer, and abort
     else if (status != 9) {
       //Fw::Logger::logMsg("[ERROR] GPS parsing incomplete status: %d\n", status); // DJW debug
       // Must return the buffer or serial driver won't be able to reuse it.
@@ -165,6 +157,7 @@ namespace GpsApp {
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
     }
+
     // GPS packet locations are of format ddmm.mmmm
     // Convert to lat/lon in decimal degrees
     // Latitude degrees, and minutes converted to degrees & multiply by direction
@@ -176,11 +169,6 @@ namespace GpsApp {
     lon = (U32)(packet.dmEW/100.0f);
     lon = lon + (packet.dmEW - (lon * 100.0f))/60.0f;
     lon = lon * ((packet.eastWest == 'E') ? 1 : -1);
-    lon = 42.42;
-    packet.altitude = 42.42;
-    packet.count = 42;
-    packet.lock = 1;
-
 
     // Step 4: generate telemetry
     this->tlmWrite_GPS_LATITUDE(lat);
@@ -189,7 +177,7 @@ namespace GpsApp {
     this->tlmWrite_GPS_SV_COUNT(packet.count);
     this->tlmWrite_GPS_LOCK_STATUS(packet.lock);
 
-    // Step 5: lock status
+    // Step 5: EVR on lock status
     // Only generate lock status event on change
     if (packet.lock == 0 && m_locked) {
       m_locked = false;
@@ -198,6 +186,7 @@ namespace GpsApp {
       m_locked = true;
       log_ACTIVITY_HI_GPS_LOCK_ACQUIRED();
     }
+
     // Must return the buffer or serial driver won't be able to reuse it.
     // Same buffer send call from preamble is used; since buffer size was overwritten to
     // hold the actual data size, need to reset it to full size before returning it.
@@ -215,7 +204,7 @@ namespace GpsApp {
         const U32 cmdSeq
     )
   {
-    // Locked-force print
+    // EVR on lock status
     if (m_locked) {
       log_ACTIVITY_HI_GPS_LOCK_ACQUIRED();
     } else {
