@@ -194,7 +194,7 @@ module GpsApp {
   instance gps: GpsApp.Gps base id 0x0F00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 90
+    priority 99
 
   # ----------------------------------------------------------------------
   # Queued component instances
