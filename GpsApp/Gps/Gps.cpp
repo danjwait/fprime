@@ -147,6 +147,7 @@ namespace GpsApp {
       //Fw::Logger::logMsg("[ERROR] did not find GNGGA status: %d\n", status); // DJW debug
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
+      return;
     }
     // If found an incomplete message log error, return buffer, and abort
     else if (status != 9) {
@@ -156,6 +157,7 @@ namespace GpsApp {
       // hold the actual data size, need to reset it to full size before returning it.
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
+      return;
     }
 
     // GPS packet locations are of format ddmm.mmmm
@@ -164,7 +166,7 @@ namespace GpsApp {
     lat = (U32)(packet.dmNS/100.0f);
     lat = lat + (packet.dmNS - (lat * 100.0f))/60.0f;
     lat = lat * ((packet.northSouth == 'N') ? 1 : -1);
-    lat = 42.32;
+
     // Longitude degrees, and minutes converted to degrees & multiply by direction
     lon = (U32)(packet.dmEW/100.0f);
     lon = lon + (packet.dmEW - (lon * 100.0f))/60.0f;
