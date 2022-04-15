@@ -97,9 +97,22 @@ namespace GpsApp {
     float lat = 0.0f, lon = 0.0f;
     GpsPacket packet;
 
+    // DEBUG
+    lat = 42.42;
+    lon = 24.24;
+    packet.altitude = 420.420;
+    packet.count = 42;
+    packet.lock = 0;
+    this->tlmWrite_GPS_LATITUDE(lat);
+    this->tlmWrite_GPS_LONGITUDE(lon);
+    this->tlmWrite_GPS_ALTITUDE(packet.altitude);
+    this->tlmWrite_GPS_SV_COUNT(packet.count);
+    this->tlmWrite_GPS_LOCK_STATUS(packet.lock);
+
     // Grab the size (used amount of buffer) and a pointer to data in buffer
     U32 buffsize = static_cast<U32>(serBuffer.getSize());
     char* pointer = reinterpret_cast<char*>(serBuffer.getData());
+    this->tlmWrite_GPS_SV_COUNT(buffsize); // DEBUG
 
     // check for invalid read status, log an error, return buffer & abort if there is problem
     // FPP v.3.0 change here:
@@ -112,6 +125,7 @@ namespace GpsApp {
       this->serialBufferOut_out(0, serBuffer);
       return;
     }
+    /*
     // If not enough data is available for a full message, return the buffer and abort.
     else if (buffsize < 24 ) {
       // Must return the buffer or serial driver won't be able to reuse it.
@@ -120,23 +134,27 @@ namespace GpsApp {
       //Fw::Logger::logMsg("[WARNING] Unfull message buffer: %d\n", buffsize); // DJW debug
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
+      this->tlmWrite_GPS_SV_COUNT(buffsize); // DEBUG
       return;
     }
+    */
     
     // Step 2: parsing
     // Parse GPS message from UART. Use standard C functions to read messages into
     // GPS package struct. If all 9 items parse, break. Else, continue to scan the 
     // block looking for messages further in
-    for (U32 i = 0; i < (buffsize - 24); i++) {
+    for (U32 i = 0; i < (buffsize); i++) {
       status = sscanf(pointer, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f",
       &packet.utcTime, &packet.dmNS, &packet.northSouth,
       &packet.dmEW, &packet.eastWest, &packet.lock,
       &packet.count, &packet.filler, &packet.altitude);
+      this->tlmWrite_GPS_ALTITUDE(status); // DEBUG
       // break when all GPS items are found
       if (status == 9) {
         break;
       }
       pointer = pointer +1;
+      this->tlmWrite_GPS_LATITUDE(status); // DEBUG
     }
 
     // If failed to find GPGGA then return buffer and abort
@@ -157,6 +175,7 @@ namespace GpsApp {
       // hold the actual data size, need to reset it to full size before returning it.
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
+      this->tlmWrite_GPS_LONGITUDE(status); // DEBUG
       return;
     }
 
