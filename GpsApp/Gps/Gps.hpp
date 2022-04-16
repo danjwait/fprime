@@ -20,31 +20,34 @@
 // Define a count of buffers & size of each.
 // Allow Gps component to manage its own buffers
 
-#define NUM_UART_BUFFERS 20
-#define UART_READ_BUFF_SIZE 1024
+#define NUM_UART_BUFFERS 5 // DJW set to 5 per RpiDemo, was 20
+#define UART_READ_BUFF_SIZE 40 // DJW set to 40 per RpiDemo, was 1024
 
 namespace GpsApp {
   class Gps :
   public GpsComponentBase
   {
-    /**
-    * @brief GpsPacket:
-    * A structured containing the information in the GPS location packet
-    * received via a NEMA GPS receiver
-    */
-    struct GpsPacket {
-      float utcTime;
-      float dmNS;
-      char northSouth;
-      float dmEW;
-      char eastWest;
-      unsigned int lock;
-      unsigned int count;
-      float filler;
-      float altitude;
-    };
 
     public:
+
+      // ----------------------------------------------------------------------
+      // Types
+      // ----------------------------------------------------------------------
+
+      /*** @brief GpsPacket:
+       * * A structured containing the information in the GPS location packet
+       * * received via a NEMA GPS receiver*/
+      struct GpsPacket {
+        float utcTime;
+        float dmNS;
+        char northSouth;
+        float dmEW;
+        char eastWest;
+        unsigned int lock;
+        unsigned int count;
+        float filler;
+        float altitude;
+      };
 
       // ----------------------------------------------------------------------
       // Construction, initialization, and destruction
@@ -67,10 +70,6 @@ namespace GpsApp {
         const NATIVE_INT_TYPE instance = 0 /*!< The instance number*/
       );
 
-      //! Preamble
-      //!
-      void preamble();
-
       //! Destroy object Gps
       //!
       ~Gps();
@@ -85,13 +84,9 @@ namespace GpsApp {
       //!
       void serialRecv_handler(
           const NATIVE_INT_TYPE portNum, /*!< The port number*/
-          Fw::Buffer &serBuffer, /*!< 
-      Buffer containing data
-      */
-          Drv::SerialReadStatus &status /*!< 
-      Status of read
-      */
-      );
+          Fw::Buffer &serBuffer, /*!< Buffer containing data*/
+          Drv::SerialReadStatus &status /*!< Status of read*/
+      ) override;
 
       // ----------------------------------------------------------------------
       // Command handler implementations
@@ -102,7 +97,10 @@ namespace GpsApp {
       void REPORT_STATUS_cmdHandler(
         const FwOpcodeType opCode, /*!< The opcode*/
         const U32 cmdSeq /*!< The command sequence number*/
-      );
+      ) override;
+      
+      //! This will be called once when task starts up
+      void preamble() override;
 
       //!< Has deviced acquired GPS lock?
       bool m_locked;
