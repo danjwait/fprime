@@ -24,14 +24,10 @@ namespace GpsApp {
   // ----------------------------------------------------------------------
 
   Gps ::
-#if FW_OBJECT_NAMES == 1
     Gps(
         const char *const compName
     ) :
       GpsComponentBase(compName),
-#else
-      GpsComponentBase(),
-#endif
     // initialize the lock to "false"
     m_locked(false)
   {
@@ -87,8 +83,8 @@ namespace GpsApp {
 
   void Gps ::
     serialRecv_handler(
-        const NATIVE_INT_TYPE portNum,
-        Fw::Buffer &serBuffer, 
+        const NATIVE_INT_TYPE portNum,  /*!< The port number*/
+        Fw::Buffer &serBuffer, /*!< Buffer containing data*/
         Drv::SerialReadStatus &serial_status // DJW this reference is different in tutorial
     )
   {
@@ -117,7 +113,7 @@ namespace GpsApp {
     // check for invalid read status, log an error, return buffer & abort if there is problem
     // FPP v.3.0 change here:
     if (serial_status != Drv::SerialReadStatus::SER_OK) {
-      Fw::Logger::logMsg("[WARNING] Received buffer with bad packet"); //: %d\n", serial_status); // DJW
+      Fw::Logger::logMsg("[WARNING] Received buffer with bad packet: %d\n", serial_status.e); 
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
@@ -125,7 +121,7 @@ namespace GpsApp {
       this->serialBufferOut_out(0, serBuffer);
       return;
     }
-    /*
+    
     // If not enough data is available for a full message, return the buffer and abort.
     else if (buffsize < 24 ) {
       // Must return the buffer or serial driver won't be able to reuse it.
@@ -137,7 +133,6 @@ namespace GpsApp {
       this->tlmWrite_GPS_SV_COUNT(buffsize); // DEBUG
       return;
     }
-    */
     
     // Step 2: parsing
     // Parse GPS message from UART. Use standard C functions to read messages into
