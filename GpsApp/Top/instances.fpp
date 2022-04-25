@@ -390,9 +390,13 @@ module GpsApp {
       true
     );
     if (!status) {
-      Fw::Logger::logMsg("[ERROR] Could not open UART driver\\n");
+      Fw::Logger::logMsg("[ERROR] Could not open GPS UART: %s\n", reinterpret_cast<POINTER_CAST>(state.device));
       Init::status = false;
       }
+    else {
+      Fw::Logger::logMsg("[INFO] Opened GPS UART driver: %s\n", reinterpret_cast<POINTER_CAST>(state.device));
+      Init::status = true;
+    }
     }
     """
     

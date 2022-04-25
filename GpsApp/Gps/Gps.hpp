@@ -20,8 +20,8 @@
 // Define a count of buffers & size of each.
 // Allow Gps component to manage its own buffers
 
-#define NUM_UART_BUFFERS 5 // DJW set to 5 per RpiDemo, was 20
-#define UART_READ_BUFF_SIZE 40 // DJW set to 40 per RpiDemo, was 1024
+#define NUM_UART_BUFFERS 20 // DJW set to 5 per RpiDemo, was 20
+#define UART_READ_BUFF_SIZE 1024 // DJW set to 40 per RpiDemo, was 1024
 
 namespace GpsApp {
   class Gps :
