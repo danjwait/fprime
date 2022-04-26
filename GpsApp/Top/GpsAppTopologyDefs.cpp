@@ -16,4 +16,6 @@ namespace GpsApp {
 
   Drv::BlockDriver blockDrv(FW_OPTIONAL_NAME("blockDrv"));
 
+  Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
+
 }

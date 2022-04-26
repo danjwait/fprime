@@ -41,6 +41,7 @@ module GpsApp {
     instance fileUplink
     instance fileUplinkBufferManager
     instance linuxTime
+    instance linuxTimer
     instance mathSender
     instance mathReceiver
     instance gpsSerial
@@ -54,9 +55,10 @@ module GpsApp {
     instance recvBuffComp
     instance sendBuffComp
     instance staticMemory
+    instance systemResources
     instance textLogger
     instance uplink
-    instance systemResources
+    
 
 
     # ----------------------------------------------------------------------
@@ -102,7 +104,9 @@ module GpsApp {
     connections RateGroups {
 
       # Block driver
-      blockDrv.CycleOut -> rateGroupDriverComp.CycleIn
+      #blockDrv.CycleOut -> rateGroupDriverComp.CycleIn
+      # Timer
+      linuxTimer.CycleOut -> rateGroupDriverComp.CycleIn
 
       # Rate group 1
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup1] -> rateGroup1Comp.CycleIn

@@ -342,6 +342,19 @@ module GpsApp {
 
   }
 
+  instance linuxTimer: Svc.LinuxTimer base id 0x1600 \
+  {
+
+    phase Fpp.ToCpp.Phases.instances """
+    // Declared in GpsAppTopologyDefs.cpp
+    """
+
+    phase Fpp.ToCpp.Phases.stopTasks """
+    linuxTimer.quit();
+    """
+
+  }
+
   instance rateGroupDriverComp: Svc.RateGroupDriver base id 0x4600 {
 
     phase Fpp.ToCpp.Phases.configObjects """
