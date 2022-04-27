@@ -18,7 +18,10 @@ Os::Log logger;
 
 volatile sig_atomic_t terminate = 0;
 
+// Handle a signal, e.g. control-C
 static void sighandler(int signum) {
+    // Call the teardown function
+    // This causes the Linux timer to quit
     GpsApp::teardown(state);
     terminate = 1;
 }
@@ -73,8 +76,10 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // console prompt for quit
     (void) printf("Hit Ctrl-C to quit\n");
 
+    // run setup
     state = GpsApp::TopologyState(hostname, port_number,device);
     GpsApp::setup(state);
 
@@ -82,15 +87,24 @@ int main(int argc, char* argv[]) {
     signal(SIGINT,sighandler);
     signal(SIGTERM,sighandler);
 
-    int cycle = 0;
+    // Start the Linux timer.
+    // The timer runs on the main thread until it quits
+    // in the teardown function, called from the signal
+    // handler.
+    GpsApp::linuxTimer.startTimer(100); //!< 10Hz
 
+    /* Original timer setup, replaced with linuxTimer
+    int cycle = 0;
     while (!terminate) {
-//        (void) printf("Cycle %d\n",cycle);
+      // (void) printf("Cycle %d\n",cycle);
         runcycles(1);
         cycle++;
     }
+    */
 
-    // Give time for threads to exit
+    // Signal handler was called, and linuxTimer quit.
+    // Time to exit the program.
+    // Give time for threads to exit.
     (void) printf("Waiting for threads...\n");
     Os::Task::delay(1000);
 

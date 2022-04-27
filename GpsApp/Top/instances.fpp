@@ -91,17 +91,18 @@ module GpsApp {
   instance cmdDisp: Svc.CommandDispatcher base id 0x0500 \
     queue size 20 \
     stack size Default.stackSize \
-    priority 90
+    priority 30
 
   instance cmdSeq: Svc.CmdSequencer base id 0x0600 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 99 \
+    priority 30 \
   {
 
     phase Fpp.ToCpp.Phases.configConstants """
     enum {
-      BUFFER_SIZE = 5*1024
+      BUFFER_SIZE = 5*1024,
+      TIMEOUT = 30
     };
     """
 
@@ -346,7 +347,7 @@ module GpsApp {
   {
 
     phase Fpp.ToCpp.Phases.instances """
-    // Declared in GpsAppTopologyDefs.cpp
+    //Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
     """
 
     phase Fpp.ToCpp.Phases.stopTasks """
@@ -403,11 +404,11 @@ module GpsApp {
       true
     );
     if (!status) {
-      Fw::Logger::logMsg("[ERROR] Could not open GPS UART: %s\n", reinterpret_cast<POINTER_CAST>(state.device));
+      Fw::Logger::logMsg("[ERROR] Could not open GPS UART: %s\\n", reinterpret_cast<POINTER_CAST>(state.device));
       Init::status = false;
       }
     else {
-      Fw::Logger::logMsg("[INFO] Opened GPS UART driver: %s\n", reinterpret_cast<POINTER_CAST>(state.device));
+      Fw::Logger::logMsg("[INFO] Opened GPS UART driver: %s\\n", reinterpret_cast<POINTER_CAST>(state.device));
       Init::status = true;
     }
     }
