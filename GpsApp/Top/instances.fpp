@@ -8,7 +8,7 @@ module GpsApp {
 
     constant queueSize = 10
 
-    constant stackSize = 64 * 1024 // for RPI
+    constant stackSize = 64 * 1024 # for RPI
 
   }
 
