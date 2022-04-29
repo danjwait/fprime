@@ -8,7 +8,7 @@ module GpsApp {
 
     constant queueSize = 10
 
-    constant stackSize = 16 * 1024
+    constant stackSize = 64 * 1024 // for RPI
 
   }
 
@@ -23,7 +23,7 @@ module GpsApp {
   {
 
     phase Fpp.ToCpp.Phases.instances """
-    // Declared in RefTopologyDefs.cpp
+    // Declared in GpsAppTopologyDefs.cpp
     """
 
   }
