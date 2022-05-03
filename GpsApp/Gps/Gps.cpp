@@ -94,16 +94,18 @@ namespace GpsApp {
     GpsPacket packet;
 
     // DEBUG
-    lat = 42.42;
-    lon = 24.24;
-    packet.altitude = 420.420;
-    packet.count = 42;
-    packet.lock = 0;
-    this->tlmWrite_GPS_LATITUDE(lat);
-    this->tlmWrite_GPS_LONGITUDE(lon);
-    this->tlmWrite_GPS_ALTITUDE(packet.altitude);
-    this->tlmWrite_GPS_SV_COUNT(packet.count);
-    this->tlmWrite_GPS_LOCK_STATUS(packet.lock);
+    //tries++;
+    //lat = 42.42;
+    //lon = 24.24;
+    //packet.altitude = 420.420;
+    //packet.count = 42;
+    //packet.lock = 0;
+    //this->tlmWrite_GPS_LATITUDE(lat);
+    //this->tlmWrite_GPS_LONGITUDE(lon);
+    //this->tlmWrite_GPS_ALTITUDE(packet.altitude);
+    //this->tlmWrite_GPS_SV_COUNT(packet.count);
+    //this->tlmWrite_GPS_LOCK_STATUS(packet.lock);
+    //this->tlmWrite_GPS_ALTITUDE(tries);
 
     // Grab the size (used amount of buffer) and a pointer to data in buffer
     U32 buffsize = static_cast<U32>(serBuffer.getSize());
@@ -123,7 +125,7 @@ namespace GpsApp {
     }
     
     // If not enough data is available for a full message, return the buffer and abort.
-    else if (buffsize < 24 ) {
+    else if (buffsize < 4 ) {
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
@@ -143,7 +145,7 @@ namespace GpsApp {
       &packet.utcTime, &packet.dmNS, &packet.northSouth,
       &packet.dmEW, &packet.eastWest, &packet.lock,
       &packet.count, &packet.filler, &packet.altitude);
-      this->tlmWrite_GPS_ALTITUDE(status); // DEBUG
+      // this->tlmWrite_GPS_ALTITUDE(status); // DEBUG
       // break when all GPS items are found
       if (status == 9) {
         break;
