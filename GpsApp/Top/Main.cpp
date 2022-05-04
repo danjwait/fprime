@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
     // The timer runs on the main thread until it quits
     // in the teardown function, called from the signal
     // handler.
-    GpsApp::linuxTimer.startTimer(100); //!< 10Hz
+    GpsApp::linuxTimer.startTimer(1000); //!< 10Hz
 
     /* Original timer setup, replaced with linuxTimer
     int cycle = 0;

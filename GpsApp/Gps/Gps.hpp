@@ -45,10 +45,12 @@ namespace GpsApp {
         char eastWest;
         unsigned int lock;
         unsigned int count;
+        float HDOP;
+        float heightWgs84;
         float filler;
         float altitude;
+        float dGpsupdate;
       };
-
       U32 tries = 0 ; // DEBUG
 
       // ----------------------------------------------------------------------

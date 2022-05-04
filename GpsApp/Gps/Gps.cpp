@@ -92,6 +92,7 @@ namespace GpsApp {
     int status = 0;
     float lat = 0.0f, lon = 0.0f;
     GpsPacket packet;
+    char dgpsStation[20];
 
     // DEBUG
     //tries++;
@@ -141,10 +142,11 @@ namespace GpsApp {
     // GPS package struct. If all 9 items parse, break. Else, continue to scan the 
     // block looking for messages further in
     for (U32 i = 0; i < (buffsize); i++) {
-      status = sscanf(pointer, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f",
+      status = sscanf(pointer, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f,M,%f,M,%f,%s",
       &packet.utcTime, &packet.dmNS, &packet.northSouth,
       &packet.dmEW, &packet.eastWest, &packet.lock,
-      &packet.count, &packet.filler, &packet.altitude);
+      &packet.count, &packet.HDOP,&packet.altitude, 
+      &packet.heightWgs84, &packet.dGpsupdate, dgpsStation);
       // this->tlmWrite_GPS_ALTITUDE(status); // DEBUG
       // break when all GPS items are found
       if (status == 9) {
