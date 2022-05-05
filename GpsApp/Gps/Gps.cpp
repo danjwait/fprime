@@ -16,6 +16,7 @@
 #include "Fw/Logger/Logger.hpp" // DJW this was in the Gps tutorial, not the stub
 
 #include <cstring>
+#include <ctype.h>
 
 namespace GpsApp {
 
@@ -33,7 +34,6 @@ namespace GpsApp {
   {
 
   }
-  // DJW only added locked status to above from stub; tutorial has this as an if
 
   void Gps ::
     init(
@@ -85,33 +85,30 @@ namespace GpsApp {
     serialRecv_handler(
         const NATIVE_INT_TYPE portNum,  /*!< The port number*/
         Fw::Buffer &serBuffer, /*!< Buffer containing data*/
-        Drv::SerialReadStatus &serial_status // DJW this reference is different in tutorial
+        Drv::SerialReadStatus &serial_status /*!< Serial read status*/
     )
   {
     // local variable definitions
     int status = 0;
     float lat = 0.0f, lon = 0.0f;
-    GpsPacket packet;
-    char dgpsStation[20];
 
-    // DEBUG
-    //tries++;
-    //lat = 42.42;
-    //lon = 24.24;
-    //packet.altitude = 420.420;
-    //packet.count = 42;
-    //packet.lock = 0;
-    //this->tlmWrite_GPS_LATITUDE(lat);
-    //this->tlmWrite_GPS_LONGITUDE(lon);
-    //this->tlmWrite_GPS_ALTITUDE(packet.altitude);
-    //this->tlmWrite_GPS_SV_COUNT(packet.count);
-    //this->tlmWrite_GPS_LOCK_STATUS(packet.lock);
-    //this->tlmWrite_GPS_ALTITUDE(tries);
+    GpsPacket packet;
 
     // Grab the size (used amount of buffer) and a pointer to data in buffer
     U32 buffsize = static_cast<U32>(serBuffer.getSize());
     char* pointer = reinterpret_cast<char*>(serBuffer.getData());
-    this->tlmWrite_GPS_SV_COUNT(buffsize); // DEBUG
+    U32 tries = 0;
+
+    // DEBUG per RPi demo
+    // convert incoming data to string. If it is not printable, set character to '*'
+    char uMsg[serBuffer.getSize()+1];
+    char* bPtr = reinterpret_cast<char*>(serBuffer.getData());
+    for (NATIVE_UINT_TYPE byte = 0; byte < serBuffer.getSize(); byte++) {
+        uMsg[byte] = isalpha(bPtr[byte])?bPtr[byte]:'*';
+    }
+    uMsg[sizeof(uMsg)-1] = 0;
+    Fw::Logger::logMsg("Raw serial:\n");
+    Fw::Logger::logMsg(uMsg);
 
     // check for invalid read status, log an error, return buffer & abort if there is problem
     // FPP v.3.0 change here:
@@ -124,13 +121,12 @@ namespace GpsApp {
       this->serialBufferOut_out(0, serBuffer);
       return;
     }
-    
+
     // If not enough data is available for a full message, return the buffer and abort.
-    else if (buffsize < 4 ) {
+    else if (buffsize < 12 ) {
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
-      //Fw::Logger::logMsg("[WARNING] Unfull message buffer: %d\n", buffsize); // DJW debug
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
       this->tlmWrite_GPS_SV_COUNT(buffsize); // DEBUG
@@ -139,21 +135,23 @@ namespace GpsApp {
     
     // Step 2: parsing
     // Parse GPS message from UART. Use standard C functions to read messages into
-    // GPS package struct. If all 9 items parse, break. Else, continue to scan the 
+    // GPS package struct. If all 12 items parse, break. Else, continue to scan the 
     // block looking for messages further in
     for (U32 i = 0; i < (buffsize); i++) {
-      status = sscanf(pointer, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f,M,%f,M,%f,%s",
+      status = sscanf(pointer, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f,M,%f,M,%f,%*c",
       &packet.utcTime, &packet.dmNS, &packet.northSouth,
       &packet.dmEW, &packet.eastWest, &packet.lock,
       &packet.count, &packet.HDOP,&packet.altitude, 
-      &packet.heightWgs84, &packet.dGpsupdate, dgpsStation);
-      // this->tlmWrite_GPS_ALTITUDE(status); // DEBUG
+      &packet.heightWgs84, &packet.dGpsupdate);
       // break when all GPS items are found
-      if (status == 9) {
+      if (status == 12) {
         break;
       }
       pointer = pointer +1;
+      tries = tries+1;
+      this->tlmWrite_GPS_SV_COUNT(buffsize); // DEBUG
       this->tlmWrite_GPS_LATITUDE(status); // DEBUG
+      this->tlmWrite_GPS_LOCK_STATUS(tries); // DEBUG
     }
 
     // If failed to find GPGGA then return buffer and abort
@@ -161,20 +159,17 @@ namespace GpsApp {
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
-      //Fw::Logger::logMsg("[ERROR] did not find GNGGA status: %d\n", status); // DJW debug
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
       return;
     }
     // If found an incomplete message log error, return buffer, and abort
     else if (status != 9) {
-      //Fw::Logger::logMsg("[ERROR] GPS parsing incomplete status: %d\n", status); // DJW debug
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
       serBuffer.setSize(UART_READ_BUFF_SIZE);
       this->serialBufferOut_out(0,serBuffer);
-      this->tlmWrite_GPS_LONGITUDE(status); // DEBUG
       return;
     }
 
