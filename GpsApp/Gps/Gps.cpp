@@ -92,23 +92,15 @@ namespace GpsApp {
     int status = 0;
     float lat = 0.0f, lon = 0.0f;
 
+    // pointer to $GPGGA sentence in string
+    char *gpgga;
+
+    // store parsed GNSS data
     GpsPacket packet;
 
     // Grab the size (used amount of buffer) and a pointer to data in buffer
     U32 buffsize = static_cast<U32>(serBuffer.getSize());
     char* pointer = reinterpret_cast<char*>(serBuffer.getData());
-    U32 tries = 0;
-
-    // DEBUG per RPi demo
-    // convert incoming data to string. If it is not printable, set character to '*'
-    char uMsg[serBuffer.getSize()+1];
-    char* bPtr = reinterpret_cast<char*>(serBuffer.getData());
-    for (NATIVE_UINT_TYPE byte = 0; byte < serBuffer.getSize(); byte++) {
-        uMsg[byte] = isalpha(bPtr[byte])?bPtr[byte]:'*';
-    }
-    uMsg[sizeof(uMsg)-1] = 0;
-    Fw::Logger::logMsg("Raw serial:\n");
-    Fw::Logger::logMsg(uMsg);
 
     // check for invalid read status, log an error, return buffer & abort if there is problem
     // FPP v.3.0 change here:
@@ -122,23 +114,44 @@ namespace GpsApp {
       return;
     }
 
-    // If not enough data is available for a full message, return the buffer and abort.
-    else if (buffsize < 12 ) {
-      // Must return the buffer or serial driver won't be able to reuse it.
-      // Same buffer send call from preamble is used; since buffer size was overwritten to
-      // hold the actual data size, need to reset it to full size before returning it.
-      serBuffer.setSize(UART_READ_BUFF_SIZE);
-      this->serialBufferOut_out(0,serBuffer);
-      this->tlmWrite_GPS_SV_COUNT(buffsize); // DEBUG
-      return;
+    // pull data from buffer and parse; if it is not printable, set character to '*'
+    char uMsg[serBuffer.getSize()+1];
+    char* bPtr = reinterpret_cast<char*>(serBuffer.getData());
+    for (NATIVE_UINT_TYPE byte = 0; byte < serBuffer.getSize(); byte++) {
+        uMsg[byte] = isprint(bPtr[byte])?bPtr[byte]:'*';
     }
-    
+    // chop off end characters from this sentence string
+    uMsg[sizeof(uMsg)-1] = 0;
+    // if there is no previous sentence string, start one
+    if (strlen(this->m_holder) == 0) {
+      strcpy(this->m_holder,uMsg);
+    }
+    else {
+      // concatenate this sentence string with previous sentence string
+      strcat(this->m_holder,uMsg);
+    }
+
+    // when the sentence string is long enough, go looking for $GPGGA data
+    if (strlen(this->m_holder) > 512) {
+      // point at the data starting with $GPGGA
+      gpgga = strstr(this->m_holder,"$GPGGA");
+      // parse out the data from the sentence string after GPGGA
+      status = sscanf(gpgga + 7,"%f,%f,%c,%f,%c,%u,%u,%f,%f,M,%f,M,%f,%*c",
+      &packet.utcTime, &packet.dmNS, &packet.northSouth,
+      &packet.dmEW, &packet.eastWest, &packet.lock,
+      &packet.count, &packet.HDOP,&packet.altitude, 
+      &packet.heightWgs84, &packet.dGpsupdate);
+
+      // once parsed, empty out the sentence string holder
+      memset(this->m_holder,0,UART_READ_BUFF_SIZE);
+    }
+    /*
     // Step 2: parsing
     // Parse GPS message from UART. Use standard C functions to read messages into
     // GPS package struct. If all 12 items parse, break. Else, continue to scan the 
     // block looking for messages further in
     for (U32 i = 0; i < (buffsize); i++) {
-      status = sscanf(pointer, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f,M,%f,M,%f,%*c",
+      status = sscanf(this->m_holder, "$GPGGA,%f,%f,%c,%f,%c,%u,%u,%f,%f,M,%f,M,%f,%*c",
       &packet.utcTime, &packet.dmNS, &packet.northSouth,
       &packet.dmEW, &packet.eastWest, &packet.lock,
       &packet.count, &packet.HDOP,&packet.altitude, 
@@ -146,6 +159,7 @@ namespace GpsApp {
       // break when all GPS items are found
       if (status == 12) {
         break;
+        this->m_holder[0] = 0;
       }
       pointer = pointer +1;
       tries = tries+1;
@@ -153,9 +167,10 @@ namespace GpsApp {
       this->tlmWrite_GPS_LATITUDE(status); // DEBUG
       this->tlmWrite_GPS_LOCK_STATUS(tries); // DEBUG
     }
+    */
 
     // If failed to find GPGGA then return buffer and abort
-    if (status ==0) {
+    if (status == 0) {
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
@@ -164,7 +179,7 @@ namespace GpsApp {
       return;
     }
     // If found an incomplete message log error, return buffer, and abort
-    else if (status != 9) {
+    else if (status != 11) {
       // Must return the buffer or serial driver won't be able to reuse it.
       // Same buffer send call from preamble is used; since buffer size was overwritten to
       // hold the actual data size, need to reset it to full size before returning it.
@@ -173,6 +188,7 @@ namespace GpsApp {
       return;
     }
 
+    // Parse the data
     // GPS packet locations are of format ddmm.mmmm
     // Convert to lat/lon in decimal degrees
     // Latitude degrees, and minutes converted to degrees & multiply by direction
@@ -197,7 +213,7 @@ namespace GpsApp {
     if (packet.lock == 0 && m_locked) {
       m_locked = false;
       log_WARNING_HI_GPS_LOCK_LOST();
-    } else if (packet.lock == 1 && !m_locked) {
+    } else if (packet.lock != 0 && !m_locked) {
       m_locked = true;
       log_ACTIVITY_HI_GPS_LOCK_ACQUIRED();
     }

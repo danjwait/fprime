@@ -113,6 +113,7 @@ namespace GpsApp {
       // that those buffers use for storage
       Fw::Buffer m_recvBuffers[NUM_UART_BUFFERS];
       BYTE m_uartBuffers[NUM_UART_BUFFERS][UART_READ_BUFF_SIZE];
+      char m_holder[UART_READ_BUFF_SIZE];
   };
 
 } // end namespace GpsApp
