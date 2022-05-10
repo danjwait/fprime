@@ -36,21 +36,34 @@ namespace GpsApp {
 
       /*** @brief GpsPacket:
        * * A structured containing the information in the GPS location packet
-       * * received via a NEMA GPS receiver*/
+       * * received via a NEMA GPS receiver
+       * * units are as-read from receiver, before parsing*/
       struct GpsPacket {
-        float utcTime;
-        float dmNS;
-        char northSouth;
-        float dmEW;
-        char eastWest;
-        unsigned int lock;
-        unsigned int count;
-        float HDOP;
-        float heightWgs84;
-        float filler;
-        float altitude;
-        float dGpsupdate;
+        float utcTime; // UTC of position hhmmss.ss
+        unsigned int date; // Date: ddmmyy
+
+        float dmNS; // Latitude (DDmm.mm)
+        char northSouth; // Latitude direction: (N = North, S = South)
+        float dmEW; // Longitude (DDDmm.mm)
+        char eastWest; // Longitude direction: (E = East, W = West)
+        float speedKnots; //Speed over ground, knots
+        float speedKmHr; // Speed, kilometres/hour
+        float heightWgs84; // Undulation between the geoid and the WGS84 ellipsoid
+        float altitude; // Antenna altitude above/below mean sea level
+        float dGpsupdate; // Age of correction data (in seconds)
         char dgpsStation[20];
+        float trackTrue; // Track made good, degrees True
+        float trackMag; // Track made good, degrees Magnetic
+        float magVar; // Magnetic variation, degrees
+        char magVarDir; // Mag variation direction E/W; (E) subtracts from True course
+        char posStatus; // Position status (A = data valid, V = data invalid)
+        unsigned int lock; // GPS quality; 0 = Fix not available or invalid
+        unsigned int count; // Number of satellites in use
+        float HDOP; // Horizontal dilution of precision, 
+        float PDOP; // Position dilution of precision
+        float VDOP;// Vertical dilution of precision
+        char mode; //Positioning system mode indicator
+        float filler;
       };
 
       // ----------------------------------------------------------------------
