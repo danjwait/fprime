@@ -224,11 +224,16 @@ namespace GpsApp {
     lon = lon * ((packet.eastWest == 'E') ? 1 : -1);
 
     // Generate telemetry
-    this->tlmWrite_GPS_LATITUDE(lat);
-    this->tlmWrite_GPS_LONGITUDE(lon);
-    this->tlmWrite_GPS_ALTITUDE(packet.altitude);
-    this->tlmWrite_GPS_SV_COUNT(packet.count);
-    this->tlmWrite_GPS_LOCK_STATUS(packet.lock);
+    this->tlmWrite_LATITUDE(lat);
+    this->tlmWrite_LONGITUDE(lon);
+    this->tlmWrite_ALTITUDE(packet.altitude);
+    this->tlmWrite_VELO_KM_SEC(packet.speedKmHr/3600);
+    this->tlmWrite_TRACK_TRUE_DEG(packet.trackTrue);
+    this->tlmWrite_TRACK_MAG_DEG(packet.trackMag);
+    this->tlmWrite_MAG_VAR_DEG(packet.magVar);
+    this->tlmWrite_PDOP(packet.PDOP);
+    this->tlmWrite_SV_COUNT(packet.count);
+    this->tlmWrite_LOCK_STATUS(packet.lock);
 
     // Send EVR on change in lock status
     // Only generate lock status event on change

@@ -45,7 +45,7 @@ module GpsApp {
     instance mathSender
     instance mathReceiver
     instance gpsSerial
-    instance gps
+    instance GPS
     instance pingRcvr
     instance prmDb
     instance rateGroup1Comp
@@ -166,8 +166,8 @@ module GpsApp {
     }
 
     connections Gps {
-      gpsSerial.serialRecv -> gps.serialRecv
-      gps.serialBufferOut -> gpsSerial.readBufferSend
+      gpsSerial.serialRecv -> GPS.serialRecv
+      GPS.serialBufferOut -> gpsSerial.readBufferSend
     }
 
   }

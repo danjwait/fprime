@@ -192,7 +192,7 @@ module GpsApp {
     stack size Default.stackSize \
     priority 90
 
-  instance gps: GpsApp.Gps base id 0x0F00 \
+  instance GPS: GpsApp.Gps base id 0x0F00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
     priority 99
