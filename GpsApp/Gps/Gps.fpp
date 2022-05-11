@@ -89,5 +89,21 @@ module GpsApp {
 
         @ current lock status
         telemetry GPS_LOCK_STATUS: U32 id 4
+
+        @ current GPS-relative velocity
+        telemetry GPS_VELO_KM_SEC: F32 id 5
+
+        @ current true ground track
+        telemetry GPS_TRACK_TRUE_DEG: F32 id 6
+
+        @ current magnetic heading
+        telemetry GPS_TRACK_MAG_DEG: F32 id 6
+
+        @ current magnetic variation
+        telemetry GPS_MAG_VAR_DEG: F32 id 6
+
+        @ current dilution of precision
+        telemetry GPS_PDOP: F32 id 6
+
     }
 }
