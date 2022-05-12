@@ -37,6 +37,9 @@ module GpsApp {
         @ telemetry port
         telemetry port tlmOut
 
+        @ output port for writing commands over UART to device
+        output port serialWrite: Drv.SerialWrite
+
         @ receive serial data port
         async input port serialRecv: Drv.SerialRead
 
@@ -70,6 +73,12 @@ module GpsApp {
         @ command to force an EVR reporting lock status
         async command REPORT_STATUS \
         opcode 0
+
+        @ command to change GPS baud rate
+        async command SET_BAUD_RATE (
+            BaudRate: BAUD @< the baud rate
+        ) \
+        opcode 1
 
         #-----
         # telemetry

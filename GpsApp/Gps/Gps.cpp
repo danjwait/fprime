@@ -262,13 +262,25 @@ namespace GpsApp {
         const U32 cmdSeq
     )
   {
-    // EVR on lock status
+    // Generate EVR of present lock status
     if (m_locked) {
       log_ACTIVITY_HI_GPS_LOCK_ACQUIRED();
     } else {
       log_WARNING_HI_GPS_LOCK_LOST();
     }
-    // Step 9: complete command
+    // complete command
+    this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
+  }
+
+  void Gps ::
+    SET_BAUD_RATE_cmdHandler(
+        const FwOpcodeType opCode, 
+        const U32 cmdSeq,
+        BaudRate BAUD 
+    )
+  {
+    // pick the command string to send based on baud rate
+    // complete command
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
   }
 

@@ -115,6 +115,14 @@ namespace GpsApp {
         const FwOpcodeType opCode, /*!< The opcode*/
         const U32 cmdSeq /*!< The command sequence number*/
       ) override;
+
+      //! Implementation for SET_BAUD_RATE command handler
+      //! command to force an EVR reporting lock status
+      void SET_BAUD_RATE_cmdHandler(
+        const FwOpcodeType opCode, /*!< The opcode*/
+        const U32 cmdSeq, /*!< The command sequence number*/
+        BaudRate BAUD /*!< the baud rate*/
+      ) override;
       
       //! This will be called once when task starts up
       void preamble() override;

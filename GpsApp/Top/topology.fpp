@@ -168,6 +168,7 @@ module GpsApp {
     connections Gps {
       gpsSerial.serialRecv -> GPS.serialRecv
       GPS.serialBufferOut -> gpsSerial.readBufferSend
+      GPS.serialWrite -> gpsSerial.serialSend
     }
 
   }
