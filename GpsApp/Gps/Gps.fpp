@@ -3,6 +3,8 @@ module GpsApp {
     @ Component for reading GPS strings from GPS hardware
     active component Gps {
 
+        include "cmdTypes.fppi"
+
         #-----
         # general ports
         #-----
@@ -76,7 +78,7 @@ module GpsApp {
 
         @ command to change GPS baud rate
         async command SET_BAUD_RATE (
-            BaudRate: BAUD @< the baud rate
+            baudRate: BaudRate @< the baud rate
         ) \
         opcode 1
 
