@@ -17,6 +17,7 @@
 
 #include <cstring>
 #include <ctype.h>
+#include <string>
 
 namespace GpsApp {
 
@@ -281,43 +282,44 @@ namespace GpsApp {
   {
     // Local variable definitions
     // string argument
-    const Fw::CmdStringArg& text;
+    std::string baudString;
     // default string, reset to default 9600 baud
     //char cmdString[24];
     // build the command based on the baud rate
     switch (BAUD.e)
     {
     case Gps_BaudRate::b4800 :
-      text = "$PMTK251,4800*27\r\n";
+      baudString = "$PMTK251,4800*14\r\n";
       break;
     case Gps_BaudRate::b9600 :
-      text = "$PMTK251,9600*27\r\n";
+      baudString = "$PMTK251,9600*17\r\n";
       break;
-    case Gps_BaudRate::b14400 :
-      text = "$PMTK251,14400*27\r\n";
-      break;
+    //case Gps_BaudRate::b14400 : // this breaks my RPi
+    //  baudString = "$PMTK251,14400*29\r\n";
+    //  break;
     case Gps_BaudRate::b19200 :
-      text = "$PMTK251,19200*27\r\n";
+      baudString = "$PMTK251,19200*22\r\n";
       break;
     case Gps_BaudRate::b38400 :
-      text = "$PMTK251,38400*27\r\n";
+      baudString = "$PMTK251,38400*27\r\n";
       break;
     case Gps_BaudRate::b57600 :
-      text = "$PMTK251,57600*27\r\n";
+      baudString = "$PMTK251,57600*2C\r\n";
       break;
     case Gps_BaudRate::b115200 :
-      text = "$PMTK251,115200*27\r\n";
+      baudString = "$PMTK251,115200*1F\r\n";
       break;
     default:
-      text = "$PMTK251,0*28\r\n";
+      baudString = "$PMTK251,0*28\r\n";
       break;
     }
 
     // send the command out over serial
     Fw::Buffer txt;
-    txt.setSize(text.length());
-    txt.setData(reinterpret_cast<U8*>(const_cast<char*>(text.toChar())));
+    txt.setSize(baudString.length());
+    txt.setData(reinterpret_cast<U8*>(const_cast<char*>(baudString.c_str())));
     this->serialWrite_out(0, txt);
+    
 
     // pick the command string to send based on baud rate
     // complete command
