@@ -17,7 +17,6 @@
 
 #include <cstring>
 #include <ctype.h>
-#include <string>
 
 namespace GpsApp {
 
@@ -273,6 +272,7 @@ namespace GpsApp {
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
   }
 
+  /* Don't use; need LinuxSerial update to work
   void Gps ::
     SET_BAUD_RATE_cmdHandler(
         const FwOpcodeType opCode, 
@@ -325,5 +325,26 @@ namespace GpsApp {
     // complete command
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
   }
+  */
+
+  void Gps ::
+    COLD_START_cmdHandler(
+        const FwOpcodeType opCode,
+        const U32 cmdSeq
+    )
+  {
+    // create command to force cold start
+    char commandString[] = "$PMTK104*37\r\n";
+
+    // send the command out over serial
+    Fw::Buffer cmdBuffer;
+    cmdBuffer.setSize(strlen(commandString));
+    cmdBuffer.setData(reinterpret_cast<U8*>(commandString));
+    this->serialWrite_out(0, cmdBuffer);
+
+    // complete command
+    this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
+  }
+
 
 } // end namespace GpsApp

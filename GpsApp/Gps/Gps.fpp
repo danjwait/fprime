@@ -72,14 +72,19 @@ module GpsApp {
         # commands
         #-----
 
-        @ command to force an EVR reporting lock status
+        @ force an EVR reporting lock status
         async command REPORT_STATUS \
         opcode 0
 
-        @ command to change GPS baud rate
-        async command SET_BAUD_RATE (
-            baudRate: BaudRate @< the baud rate
-        ) \
+        # Don't use; need to hook up LinuxSerial change to work
+        #@ change GPS baud rate
+        #async command SET_BAUD_RATE (
+        #    baudRate: BaudRate @< the baud rate
+        #) \
+        #opcode 1
+
+        @ force cold start on reboot
+        async command COLD_START \
         opcode 1
 
         #-----

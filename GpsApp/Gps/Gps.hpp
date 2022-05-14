@@ -116,14 +116,23 @@ namespace GpsApp {
         const U32 cmdSeq /*!< The command sequence number*/
       ) override;
 
+      // Don't use; need LinuxSerial update to work
       //! Implementation for SET_BAUD_RATE command handler
-      //! command to force an EVR reporting lock status
-      void SET_BAUD_RATE_cmdHandler(
+      //! command to change baud rate
+      //void SET_BAUD_RATE_cmdHandler(
+      //  const FwOpcodeType opCode, /*!< The opcode*/
+      //  const U32 cmdSeq, /*!< The command sequence number*/
+      //  Gps_BaudRate BAUD /*!< the baud rate*/
+      //) override;
+      //
+
+      //! Implementation for COLD_START command handler
+      //! command to cause cold start on reboot
+      void COLD_START_cmdHandler(
         const FwOpcodeType opCode, /*!< The opcode*/
-        const U32 cmdSeq, /*!< The command sequence number*/
-        Gps_BaudRate BAUD /*!< the baud rate*/
+        const U32 cmdSeq /*!< The command sequence number*/
       ) override;
-      
+
       //! This will be called once when task starts up
       void preamble() override;
 
