@@ -40,6 +40,9 @@ Go to the `fprime` directory at the top of the repository branch and run `mkdir 
 
 Within the topology we can and will refer to other components in directories outside the `GpsApp` directory, as with the previous tutorials. This would be a good discussion with your team, as to how you want to structure the directories for multi-purpose components vs application -specific directories.
 
+TODO
+ - CMakeLists.txt under GpsApp
+
 ## The GpsApp Topology
 This tutorial will walk through smore more steps involved in working with the application topology. The steps are:
  - Define and create the FPP models for the topology (instances.fpp and topology.fpp)
