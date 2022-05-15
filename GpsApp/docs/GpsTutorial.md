@@ -6,7 +6,7 @@ This tutorial is intended to help you extend your F' development capabilities fr
 
 Specifically this tutorial will employ some of the provided F' components to use the data bus on an embedded target in order to connect another device to the target in order to start building a complete embedded system. In this case we will use a GPS device, connected over UART, to a Raspberry Pi running F' on a Linux-based OS. This will be following the Application-Manager-Driver pattern described in the [F' Users Guide](https://nasa.github.io/fprime/UsersGuide/best/app-man-drv.html) with our Gps component being the GPS device "Manager" in that pattern.
 
-This tutorial will also cover some aspects of the Topology development, getting closer to starting from "scratch" to build an application (rather an adding to the `/Ref` application ). This process with include things like working with the `Main.cpp` file to build a TopologyState to include the GPS device and using `include <file>.fppi` approach to break up some of the files into smaller more focused parts. 
+This tutorial will also cover some aspects of the topology development. This process with include things like working with the `Main.cpp` file to build a TopologyState to include the GPS device, configuring components in the `instances.fpp` file, and using `include <file>.fppi` approach to break up some of the files into smaller more focused parts. 
 
 Before diving in we should point out what this tutorial *is not* so that you understand the other tasks that you will need to work as you develop your own embedded system using the F' architecture and framework. This tutorial is not:
  - A GPS or GNSS tutorial; we will not cover how to use a GNSS/GPS device as part of your system. In particular we will not develop navigation or timing functions from the GPS device
@@ -41,7 +41,7 @@ Go to the `fprime` directory at the top of the repository branch and run `mkdir 
 Within the topology we can and will refer to other components in directories outside the `GpsApp` directory, as with the previous tutorials. This would be a good discussion with your team, as to how you want to structure the directories for multi-purpose components vs application -specific directories.
 
 ## The GpsApp Topology
-This tutorial will walk through a bit more of making an application topology "from scratch." The steps are:
+This tutorial will walk through smore more steps involved in working with the application topology. The steps are:
  - Define and create the FPP models for the topology (instances.fpp and topology.fpp)
  - Create the Main.cpp file
  - Create the TopologyDefs.hpp and TopologyDefs.cpp files
@@ -52,6 +52,12 @@ This tutorial will walk through a bit more of making an application topology "fr
 In the `GpsApp/Top` directory create a set of files:
  - `instances.fpp` : this will define the list of [component instances](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Component-Instances) and their names in the application
  - `topology.fpp` : this will define the [relationships between the component](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Topologies) instances
+
+TODO:
+ - discuss these files
+ - CMakeLists.txt
+ - Main.cpp
+ - TopologyDefs.hpp and .cpp
 
 ## The Gps Component
 Unlike the [MathComponent Tutorial](https://github.com/nasa/fprime/tree/devel/docs/Tutorials/MathComponent) we can jump directly to creating the `Gps` component, since this component will only make use of existing ports and types. The steps are:
