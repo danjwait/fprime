@@ -694,7 +694,7 @@ TODO - discussion
 
 **Complete the GpsAppTopologyDefs.hpp file:**
 Open the `GpsAppTopologyDefs.hpp` file and fill in the following content:
-```
+```c++
 #ifndef GpsAppTopologyDefs_HPP
 #define GpsAppTopologyDefs_HPP
 
@@ -774,7 +774,7 @@ TODO - discussion
 
 **Complete the GpsAppTopologyDefs.cpp file:**
 Open the `GpsAppTopologyDefs.cpp` file and fill in the following content:
-```
+```c++
 #include "GpsApp/Top/GpsAppTopologyDefs.hpp"
 
 namespace GpsApp {
@@ -800,7 +800,7 @@ TODO - discussion
 
 **Complete the Main.cpp file:**
 Open the `Main.cpp` file and fill in the following content:
-```
+```c++
 #include <getopt.h>
 #include <cstdlib>
 #include <ctype.h>
