@@ -26,23 +26,23 @@ static void sighandler(int signum) {
     terminate = 1;
 }
 
-void run1cycle() {
-    // call interrupt to emulate a clock
-    GpsApp::blockDrv.callIsr();
-    Os::Task::delay(1000); //10Hz
-}
+//void run1cycle() {
+//    // call interrupt to emulate a clock
+//    GpsApp::blockDrv.callIsr();
+//    Os::Task::delay(1000); //10Hz
+//}
 
-void runcycles(NATIVE_INT_TYPE cycles) {
-    if (cycles == -1) {
-        while (true) {
-            run1cycle();
-        }
-    }
-
-    for (NATIVE_INT_TYPE cycle = 0; cycle < cycles; cycle++) {
-        run1cycle();
-    }
-}
+//void runcycles(NATIVE_INT_TYPE cycles) {
+//    if (cycles == -1) {
+//        while (true) {
+//            run1cycle();
+//        }
+//    }
+//
+//    for (NATIVE_INT_TYPE cycle = 0; cycle < cycles; cycle++) {
+//        run1cycle();
+//    }
+//}
 
 int main(int argc, char* argv[]) {
     U32 port_number = 0; // Invalid port number forced
