@@ -102,7 +102,6 @@ module GpsApp {
       # Rate group 2
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2Comp.CycleIn
       rateGroup2Comp.RateGroupMemberOut[0] -> cmdSeq.schedIn
-      rateGroup2Comp.RateGroupMemberOut[1] -> sendBuffComp.SchedIn
 
       # Rate group 3
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup3] -> rateGroup3Comp.CycleIn
