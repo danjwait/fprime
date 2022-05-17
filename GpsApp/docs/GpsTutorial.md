@@ -263,11 +263,6 @@ module GpsApp {
     stack size Default.stackSize \
     priority 90
 
-  instance pingRcvr: Ref.PingReceiver base id 0x0A00 \
-    queue size Default.queueSize \
-    stack size Default.stackSize \
-    priority 90
-
   instance eventLogger: Svc.ActiveLogger base id 0x0B00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
@@ -322,12 +317,6 @@ module GpsApp {
     """
 
   }
-
-  instance sendBuffComp: Ref.SendBuff base id 0x2600 \
-    queue size Default.queueSize
-
-  instance mathReceiver: Ref.MathReceiver base id 0x2700 \
-    queue size Default.queueSize
 
   # ----------------------------------------------------------------------
   # Passive component instances
@@ -459,8 +448,6 @@ module GpsApp {
 
   }
 
-  instance recvBuffComp: Ref.RecvBuff base id 0x4700
-
   instance staticMemory: Svc.StaticMemory base id 0x4800
 
   instance textLogger: Svc.PassiveTextLogger base id 0x4900
@@ -563,14 +550,11 @@ module GpsApp {
     instance linuxTimer
     instance GPS_SERIAL
     instance GPS
-    instance pingRcvr
     instance prmDb
     instance rateGroup1Comp
     instance rateGroup2Comp
     instance rateGroup3Comp
     instance rateGroupDriverComp
-    instance recvBuffComp
-    instance sendBuffComp
     instance staticMemory
     instance systemResources
     instance textLogger
@@ -609,7 +593,6 @@ module GpsApp {
       downlink.bufferDeallocate -> fileDownlink.bufferReturn
 
       comm.deallocate -> staticMemory.bufferDeallocate[Ports_StaticMemory.downlink]
-
     }
 
     connections FaultProtection {
@@ -637,7 +620,6 @@ module GpsApp {
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup3] -> rateGroup3Comp.CycleIn
       rateGroup3Comp.RateGroupMemberOut[0] -> $health.Run
       rateGroup3Comp.RateGroupMemberOut[1] -> fileUplinkBufferManager.schedIn
-
     }
 
     connections Sequencer {
@@ -658,7 +640,6 @@ module GpsApp {
       uplink.bufferOut -> fileUplink.bufferSendIn
       uplink.bufferDeallocate -> fileUplinkBufferManager.bufferSendIn
       fileUplink.bufferSendOut -> fileUplinkBufferManager.bufferSendIn
-
     }
 
     connections Gps {
@@ -739,7 +720,6 @@ namespace GpsApp {
     namespace fileDownlink { enum { WARN = 3, FATAL = 5 }; }
     namespace fileManager { enum { WARN = 3, FATAL = 5 }; }
     namespace fileUplink { enum { WARN = 3, FATAL = 5 }; }
-    namespace pingRcvr { enum { WARN = 3, FATAL = 5 }; }
     namespace prmDb { enum { WARN = 3, FATAL = 5 }; }
     namespace rateGroup1Comp { enum { WARN = 3, FATAL = 5 }; }
     namespace rateGroup2Comp { enum { WARN = 3, FATAL = 5 }; }
@@ -786,6 +766,8 @@ Open the `Main.cpp` file and fill in the following content:
 #include <getopt.h>
 #include <cstdlib>
 #include <ctype.h>
+#include <signal.h>
+#include <cstdio>
 
 #include <Os/Log.hpp>
 #include <GpsApp/Top/GpsAppTopologyAc.hpp>
@@ -793,9 +775,6 @@ Open the `Main.cpp` file and fill in the following content:
 void print_usage(const char* app) {
     (void) printf("Usage: ./%s [options]\n-p\tport_number\n-a\thostname/IP address\n",app);
 }
-
-#include <signal.h>
-#include <cstdio>
 
 GpsApp::TopologyState state;
 // Enable the console logging provided by Os::Log
@@ -809,18 +788,6 @@ static void sighandler(int signum) {
     // This causes the Linux timer to quit
     GpsApp::teardown(state);
     terminate = 1;
-}
-
-void runcycles(NATIVE_INT_TYPE cycles) {
-    if (cycles == -1) {
-        while (true) {
-            run1cycle();
-        }
-    }
-
-    for (NATIVE_INT_TYPE cycle = 0; cycle < cycles; cycle++) {
-        run1cycle();
-    }
 }
 
 int main(int argc, char* argv[]) {
@@ -1073,7 +1040,7 @@ This is the complete list of telemetry parameters that will be output by the Gps
 
 Note that we are not including the GPS time or date relayed by the device; how to work with that data would be something you should work with your architecture.
 
-We will leave the `params.fppi` file blank for this tutorial.
+We will leave the `param.fppi` file blank for this tutorial.
 
 Open the `CMakeLists.txt` file and add the following contents:
 ```
