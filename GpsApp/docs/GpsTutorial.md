@@ -1054,7 +1054,21 @@ register_fprime_module()
 ### Impliment the model files
 In `/GpsApp` directory run `fprime-util generate` to generate the build cache files for the native system, and then `fprime-util generate raspberrypi` for the Raspberry Pi. 
 
-In the `/GpsApp/Gps` directory, rename the autogenerted files
+Change into the `/GpsApp/Gps` component directory and run the implimentation command `fprime-util impl` to create the stub implimentation of the Gps component. There should be two new files in the `/GpsApp/Gps` directory:
+ - `GpsComponentImpl.hpp-template`
+ - `GpsComponentImpl.cpp-template`
+
+Rename the files for the components (we'll use these names; please work with your team for your prefered component naming):
+```
+mv GpsComponentImpl.hpp-template Gps.hpp
+mv GpsComponentImpl.cpp-template Gps.cpp
+```
+The new stub implimentation files should build, so test that before filling out the stubs by running the build command(s):
+```
+fprime-util build --jobs 8
+fprime-util build raspberrypi --jobs 8
+```
+The first command builds on the host machine OS, the second for the Raspberry Pi. Note the `--jobs` option is how many cores to run on the host, per the note in the [Math Component Tutorial](fprime-util build raspberrypi --jobs 8).
 
 ### Complete the Gps Implimentation
 Open the `Gps.hpp` file and add the following contents:
