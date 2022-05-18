@@ -304,7 +304,7 @@ module GpsApp {
   {
 
     phase Fpp.ToCpp.Phases.instances """
-    //Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
+    Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
     """
 
     phase Fpp.ToCpp.Phases.stopTasks """
