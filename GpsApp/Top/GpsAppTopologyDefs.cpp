@@ -8,7 +8,7 @@ namespace GpsApp {
 
   }
 
-    namespace Init {
+  namespace Init {
 
     bool status = true;
 
