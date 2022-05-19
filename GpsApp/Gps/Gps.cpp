@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <GpsApp/Gps/Gps.hpp>
 #include "Fw/Types/BasicTypes.hpp"
+#include "Fw/Logger/Logger.hpp" 
 
 
 namespace GpsApp {
@@ -19,7 +20,7 @@ namespace GpsApp {
   Gps ::
     Gps(
         const char *const compName
-    ) : GpsComponentBase(compName)
+    ) : GpsComponentBase(compName),
     // initialize the lock to "false" on construction
     m_locked(false)
   {
@@ -67,7 +68,7 @@ namespace GpsApp {
     serialRecv_handler(
         const NATIVE_INT_TYPE portNum,
         Fw::Buffer &serBuffer,
-        Drv::SerialReadStatus &status
+        Drv::SerialReadStatus &serial_status
     )
   {
     // Local variable definitions
@@ -210,7 +211,7 @@ namespace GpsApp {
     this->tlmWrite_LATITUDE(lat);
     this->tlmWrite_LONGITUDE(lon);
     this->tlmWrite_ALTITUDE(packet.altitude);
-    this->tlmWrite_VELO_KM_SEC(packet.speedKmHr/3600);
+    this->tlmWrite_VEL_KM_SEC(packet.speedKmHr/3600);
     this->tlmWrite_TRACK_TRUE_DEG(packet.trackTrue);
     this->tlmWrite_TRACK_MAG_DEG(packet.trackMag);
     this->tlmWrite_MAG_VAR_DEG(packet.magVar);
