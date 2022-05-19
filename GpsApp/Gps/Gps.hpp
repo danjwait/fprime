@@ -12,8 +12,8 @@
 // Define memory footprint of buffers
 // Define a count of buffers & size of each.
 // Allow Gps component to manage its own buffers
-#define NUM_UART_BUFFERS 5 
-#define UART_READ_BUFF_SIZE 40 
+#define NUM_UART_BUFFERS 20 
+#define UART_READ_BUFF_SIZE 1024 
 
 namespace GpsApp {
 
