@@ -423,7 +423,7 @@ module GpsApp {
   {
 
     phase Fpp.ToCpp.Phases.instances """
-    //Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
+    Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
     """
 
     phase Fpp.ToCpp.Phases.stopTasks """
@@ -746,7 +746,7 @@ namespace GpsApp {
 
   }
 
-    namespace Init {
+  namespace Init {
 
     bool status = true;
 
@@ -1261,6 +1261,12 @@ Open the `Gps.hpp` file and add the conents for `struct GpsPacket` and `Addition
 
 #include "GpsApp/Gps/GpsComponentAc.hpp"
 
+// Define memory footprint of buffers
+// Define a count of buffers & size of each.
+// Allow Gps component to manage its own buffers
+#define NUM_UART_BUFFERS 5 
+#define UART_READ_BUFF_SIZE 40 
+
 namespace GpsApp {
 
   class Gps :
@@ -1400,6 +1406,7 @@ Open the `Gps.cpp` file and add the following contents where you see the `// TOD
 #include <ctype.h>
 #include <GpsApp/Gps/Gps.hpp>
 #include "Fw/Types/BasicTypes.hpp"
+#include "Fw/Logger/Logger.hpp" 
 
 
 namespace GpsApp {
@@ -1411,7 +1418,7 @@ namespace GpsApp {
   Gps ::
     Gps(
         const char *const compName
-    ) : GpsComponentBase(compName)
+    ) : GpsComponentBase(compName),
     // initialize the lock to "false" on construction
     m_locked(false)
   {
@@ -1459,7 +1466,7 @@ namespace GpsApp {
     serialRecv_handler(
         const NATIVE_INT_TYPE portNum,
         Fw::Buffer &serBuffer,
-        Drv::SerialReadStatus &status
+        Drv::SerialReadStatus &serial_status
     )
   {
     // Local variable definitions
@@ -1602,7 +1609,7 @@ namespace GpsApp {
     this->tlmWrite_LATITUDE(lat);
     this->tlmWrite_LONGITUDE(lon);
     this->tlmWrite_ALTITUDE(packet.altitude);
-    this->tlmWrite_VELO_KM_SEC(packet.speedKmHr/3600);
+    this->tlmWrite_VEL_KM_SEC(packet.speedKmHr/3600);
     this->tlmWrite_TRACK_TRUE_DEG(packet.trackTrue);
     this->tlmWrite_TRACK_MAG_DEG(packet.trackMag);
     this->tlmWrite_MAG_VAR_DEG(packet.magVar);
