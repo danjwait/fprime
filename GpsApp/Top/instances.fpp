@@ -346,11 +346,11 @@ module GpsApp {
 
   instance systemResources: Svc.SystemResources base id 0x4B00
 
-  instance gpsSerial: Drv.LinuxSerialDriver base id 0x4C00 \
+  instance GPS_SERIAL: Drv.LinuxSerialDriver base id 0x4C00 \
   {
     phase Fpp.ToCpp.Phases.configComponents  """
     {
-    const bool status = gpsSerial.open(
+    const bool status = GPS_SERIAL.open(
       state.device,
       Drv::LinuxSerialDriverComponentImpl::BAUD_9600,
       Drv::LinuxSerialDriverComponentImpl::NO_FLOW,
@@ -370,7 +370,7 @@ module GpsApp {
     
     phase Fpp.ToCpp.Phases.startTasks """
     if (Init::status) {
-      gpsSerial.startReadThread();
+      GPS_SERIAL.startReadThread();
     }
     else {
       Fw::Logger::logMsg("[ERROR] Initialization failed; not starting UART driver\\n");
@@ -378,7 +378,7 @@ module GpsApp {
     """
 
     phase Fpp.ToCpp.Phases.stopTasks """
-    gpsSerial.quitReadThread();
+    GPS_SERIAL.quitReadThread();
     """
   }
 

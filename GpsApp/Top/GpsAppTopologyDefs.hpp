@@ -68,7 +68,7 @@ namespace GpsApp {
     namespace rateGroup1Comp { enum { WARN = 3, FATAL = 5 }; }
     namespace rateGroup2Comp { enum { WARN = 3, FATAL = 5 }; }
     namespace rateGroup3Comp { enum { WARN = 3, FATAL = 5 }; }
-    namespace gps { enum { WARN = 3, FATAL = 5 }; }
+    namespace GPS { enum { WARN = 3, FATAL = 5 }; }
   }
 
 }

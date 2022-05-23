@@ -36,7 +36,7 @@ module GpsApp {
     instance fileUplink
     instance fileUplinkBufferManager
     instance linuxTime
-    instance gpsSerial
+    instance GPS_SERIAL
     instance GPS
     instance prmDb
     instance rateGroup1Comp
@@ -136,9 +136,9 @@ module GpsApp {
     }
 
     connections Gps {
-      gpsSerial.serialRecv -> GPS.serialRecv
-      GPS.serialBufferOut -> gpsSerial.readBufferSend
-      GPS.serialWrite -> gpsSerial.serialSend
+      GPS_SERIAL.serialRecv -> GPS.serialRecv
+      GPS.serialBufferOut -> GPS_SERIAL.readBufferSend
+      GPS.serialWrite -> GPS_SERIAL.serialSend
     }
 
   }
