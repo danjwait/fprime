@@ -11,9 +11,9 @@ void print_usage(const char* app) {
     (void) printf("Usage: ./%s [options]\n-p\tport_number\n-a\thostname/IP address\n",app);
 }
 
-
-
+// Topology state structure
 GpsApp::TopologyState state;
+
 // Enable the console logging provided by Os::Log
 Os::Log logger;
 
@@ -22,7 +22,6 @@ volatile sig_atomic_t terminate = 0;
 // Handle a signal, e.g. control-C
 static void sighandler(int signum) {
     // Call the teardown function
-    // This causes the Linux timer to quit
     GpsApp::teardown(state);
     terminate = 1;
 }
@@ -88,13 +87,7 @@ int main(int argc, char* argv[]) {
     signal(SIGINT,sighandler);
     signal(SIGTERM,sighandler);
 
-    // Start the Linux timer.
-    // The timer runs on the main thread until it quits
-    // in the teardown function, called from the signal
-    // handler.
-    //GpsApp::linuxTimer.startTimer(1000); //!< 10Hz
-
-    // Original timer setup, replaced with linuxTimer
+    // run block driver timer
     int cycle = 0;
     while (!terminate) {
       // (void) printf("Cycle %d\n",cycle);
@@ -102,8 +95,7 @@ int main(int argc, char* argv[]) {
         cycle++;
     }
     
-
-    // Signal handler was called, and linuxTimer quit.
+    // Signal handler was called, and block driver quit.
     // Time to exit the program.
     // Give time for threads to exit.
     (void) printf("Waiting for threads...\n");
