@@ -42,8 +42,8 @@ module GpsApp {
     instance fileUplinkBufferManager
     instance linuxTime
     #instance linuxTimer
-    instance mathSender
-    instance mathReceiver
+    #instance mathSender
+    #instance mathReceiver
     instance gpsSerial
     instance GPS
     instance pingRcvr
@@ -115,8 +115,8 @@ module GpsApp {
       rateGroup1Comp.RateGroupMemberOut[2] -> chanTlm.Run
       rateGroup1Comp.RateGroupMemberOut[3] -> fileDownlink.Run
       rateGroup1Comp.RateGroupMemberOut[4] -> systemResources.run
-      rateGroup1Comp.RateGroupMemberOut[5] -> mathReceiver.schedIn
-      rateGroup1Comp.RateGroupMemberOut[6] -> uplink.schedIn
+      # rateGroup1Comp.RateGroupMemberOut[5] -> mathReceiver.schedIn
+      rateGroup1Comp.RateGroupMemberOut[5] -> uplink.schedIn
 
       # Rate group 2
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2Comp.CycleIn
@@ -158,11 +158,6 @@ module GpsApp {
       uplink.bufferDeallocate -> fileUplinkBufferManager.bufferSendIn
       fileUplink.bufferSendOut -> fileUplinkBufferManager.bufferSendIn
 
-    }
-
-    connections Math {
-      mathSender.mathOpOut -> mathReceiver.mathOpIn
-      mathReceiver.mathResultOut -> mathSender.mathResultIn
     }
 
     connections Gps {

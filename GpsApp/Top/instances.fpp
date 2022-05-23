@@ -186,12 +186,7 @@ module GpsApp {
     """
 
   }
-
-  instance mathSender: Ref.MathSender base id 0x0E00 \
-    queue size Default.queueSize \
-    stack size Default.stackSize \
-    priority 90
-
+  
   instance GPS: GpsApp.Gps base id 0x0F00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
@@ -237,9 +232,6 @@ module GpsApp {
     queue size Default.queueSize
 
   instance sendBuffComp: Ref.SendBuff base id 0x2600 \
-    queue size Default.queueSize
-
-  instance mathReceiver: Ref.MathReceiver base id 0x2700 \
     queue size Default.queueSize
 
   # ----------------------------------------------------------------------
