@@ -5,12 +5,15 @@
 #include "Fw/Logger/Logger.hpp"
 #include "GpsApp/Top/FppConstantsAc.hpp"
 #include "Svc/FramingProtocol/FprimeProtocol.hpp"
-#include "Svc/LinuxTimer/LinuxTimer.hpp"
+#include "Drv/BlockDriver/BlockDriver.hpp"
+//#include "Svc/LinuxTimer/LinuxTimer.hpp"
 
 namespace GpsApp {
 
   // Declare the Linux timer here so it is visible in main
-  extern Svc::LinuxTimer linuxTimer;
+  //extern Svc::LinuxTimer linuxTimer;
+  // Declare the block driver here so it is visible in main
+  extern Drv::BlockDriver blockDrv;
 
   namespace Allocation {
 
@@ -53,6 +56,7 @@ namespace GpsApp {
 
   // Health ping entries
   namespace PingEntries {
+    namespace blockDrv { enum { WARN = 3, FATAL = 5 }; }
     namespace chanTlm { enum { WARN = 3, FATAL = 5 }; }
     namespace cmdDisp { enum { WARN = 3, FATAL = 5 }; }
     namespace cmdSeq { enum { WARN = 3, FATAL = 5 }; }

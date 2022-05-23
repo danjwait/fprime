@@ -16,6 +16,18 @@ module GpsApp {
   # Active component instances
   # ----------------------------------------------------------------------
 
+    instance blockDrv: Drv.BlockDriver base id 0x0100 \
+    queue size Default.queueSize \
+    stack size Default.stackSize \
+    priority 99 \
+  {
+
+    phase Fpp.ToCpp.Phases.instances """
+    // Declared in GpsAppTopologyDefs.cpp
+    """
+
+  }
+
   instance rateGroup1Comp: Svc.ActiveRateGroup base id 0x0200 \
     queue size Default.queueSize \
     stack size Default.stackSize \
@@ -300,23 +312,10 @@ module GpsApp {
 
   }
 
-  instance linuxTimer: Svc.LinuxTimer base id 0x1600 \
-  {
-
-    phase Fpp.ToCpp.Phases.instances """
-    Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
-    """
-
-    phase Fpp.ToCpp.Phases.stopTasks """
-    linuxTimer.quit();
-    """
-
-  }
-
   instance rateGroupDriverComp: Svc.RateGroupDriver base id 0x4600 {
 
     phase Fpp.ToCpp.Phases.configObjects """
-    NATIVE_INT_TYPE rgDivs[Svc::RateGroupDriver::DIVIDER_SIZE] = { 1, 10, 4 };
+    NATIVE_INT_TYPE rgDivs[Svc::RateGroupDriver::DIVIDER_SIZE] = { 1, 2, 4 };
     """
 
     phase Fpp.ToCpp.Phases.instances """

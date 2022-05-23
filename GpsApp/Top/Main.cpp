@@ -11,7 +11,9 @@ void print_usage(const char* app) {
     (void) printf("Usage: ./%s [options]\n-p\tport_number\n-a\thostname/IP address\n",app);
 }
 
+// State definition
 GpsApp::TopologyState state;
+
 // Enable the console logging provided by Os::Log
 Os::Log logger;
 
@@ -25,6 +27,26 @@ static void sighandler(int signum) {
     terminate = 1;
 }
 
+// pseudo clock; replace with clock on target
+void run1cycle() {
+    // call interrupt to emulate a clock
+    GpsApp::blockDrv.callIsr();
+    Os::Task::delay(1000); // 10Hz
+}
+
+void runcycles(NATIVE_INT_TYPE cycles) {
+    if (cycles == -1) {
+        while (true) {
+            run1cycle();
+        }
+    }
+
+    for (NATIVE_INT_TYPE cycle = 0; cycle < cycles; cycle++) {
+        run1cycle();
+    }
+}
+
+// Takes command line arguments to sill in state
 int main(int argc, char* argv[]) {
     U32 port_number = 0; // Invalid port number forced
     I32 option;
@@ -60,7 +82,7 @@ int main(int argc, char* argv[]) {
     // console prompt for quit
     (void) printf("Hit Ctrl-C to quit\n");
 
-    // run setup
+    // run setup with state
     state = GpsApp::TopologyState(hostname, port_number,device);
     GpsApp::setup(state);
 
@@ -68,11 +90,19 @@ int main(int argc, char* argv[]) {
     signal(SIGINT,sighandler);
     signal(SIGTERM,sighandler);
 
+    int cycle = 0;
+
+    while (!terminate) {
+        (void) printf("Cycle %d\n",cycle);
+        runcycles(1);
+        cycle++;
+    }
+
     // Start the Linux timer.
     // The timer runs on the main thread until it quits
     // in the teardown function, called from the signal
     // handler.
-    GpsApp::linuxTimer.startTimer(10); //!< 10Hz
+    //GpsApp::linuxTimer.startTimer(10); //!< 10Hz
 
     // Signal handler was called, and linuxTimer quit.
     // Time to exit the program.

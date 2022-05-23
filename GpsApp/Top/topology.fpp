@@ -22,6 +22,7 @@ module GpsApp {
     # ----------------------------------------------------------------------
 
     instance $health
+    instance blockDrv
     instance chanTlm
     instance cmdDisp
     instance cmdSeq
@@ -35,7 +36,7 @@ module GpsApp {
     instance fileUplink
     instance fileUplinkBufferManager
     instance linuxTime
-    instance linuxTimer
+    #instance linuxTimer
     instance GPS_SERIAL
     instance GPS
     instance prmDb
@@ -90,7 +91,9 @@ module GpsApp {
     connections RateGroups {
 
       # Timer
-      linuxTimer.CycleOut -> rateGroupDriverComp.CycleIn
+      #linuxTimer.CycleOut -> rateGroupDriverComp.CycleIn
+      # Block driver
+      blockDrv.CycleOut -> rateGroupDriverComp.CycleIn
 
       # Rate group 1
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup1] -> rateGroup1Comp.CycleIn
@@ -107,6 +110,7 @@ module GpsApp {
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup3] -> rateGroup3Comp.CycleIn
       rateGroup3Comp.RateGroupMemberOut[0] -> $health.Run
       rateGroup3Comp.RateGroupMemberOut[1] -> fileUplinkBufferManager.schedIn
+      rateGroup3Comp.RateGroupMemberOut[2] -> blockDrv.Sched
     }
 
     connections Sequencer {
