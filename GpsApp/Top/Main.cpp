@@ -1,6 +1,8 @@
 #include <getopt.h>
 #include <cstdlib>
 #include <ctype.h>
+#include <signal.h>
+#include <cstdio>
 
 #include <Os/Log.hpp>
 #include <GpsApp/Top/GpsAppTopologyAc.hpp>
@@ -9,8 +11,7 @@ void print_usage(const char* app) {
     (void) printf("Usage: ./%s [options]\n-p\tport_number\n-a\thostname/IP address\n",app);
 }
 
-#include <signal.h>
-#include <cstdio>
+
 
 GpsApp::TopologyState state;
 // Enable the console logging provided by Os::Log
@@ -91,16 +92,16 @@ int main(int argc, char* argv[]) {
     // The timer runs on the main thread until it quits
     // in the teardown function, called from the signal
     // handler.
-    GpsApp::linuxTimer.startTimer(1000); //!< 10Hz
+    //GpsApp::linuxTimer.startTimer(1000); //!< 10Hz
 
-    /* Original timer setup, replaced with linuxTimer
+    // Original timer setup, replaced with linuxTimer
     int cycle = 0;
     while (!terminate) {
       // (void) printf("Cycle %d\n",cycle);
         runcycles(1);
         cycle++;
     }
-    */
+    
 
     // Signal handler was called, and linuxTimer quit.
     // Time to exit the program.
