@@ -8,7 +8,7 @@ module GpsApp {
 
     constant queueSize = 10
 
-    constant stackSize = 64 * 1024 
+    constant stackSize = 64 * 1024 # for RPI
 
   }
 
@@ -16,7 +16,7 @@ module GpsApp {
   # Active component instances
   # ----------------------------------------------------------------------
 
-    instance blockDrv: Drv.BlockDriver base id 0x0100 \
+  instance blockDrv: Drv.BlockDriver base id 0x0100 \
     queue size Default.queueSize \
     stack size Default.stackSize \
     priority 99 \
@@ -181,7 +181,7 @@ module GpsApp {
     """
 
   }
-
+  
   instance GPS: GpsApp.Gps base id 0x0F00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
@@ -373,7 +373,7 @@ module GpsApp {
       GPS_SERIAL.startReadThread();
     }
     else {
-      Fw::Logger::logMsg("[ERROR] Initialization failed; not starting GPS UART driver\\n");
+      Fw::Logger::logMsg("[ERROR] Initialization failed; not starting UART driver\\n");
     }
     """
 

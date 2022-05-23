@@ -8,14 +8,12 @@ namespace GpsApp {
 
   }
 
-  namespace Init {
+    namespace Init {
 
     bool status = true;
 
   }
 
   Drv::BlockDriver blockDrv(FW_OPTIONAL_NAME("blockDrv"));
-
-  //Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
 
 }

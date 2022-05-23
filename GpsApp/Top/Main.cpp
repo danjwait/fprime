@@ -11,7 +11,7 @@ void print_usage(const char* app) {
     (void) printf("Usage: ./%s [options]\n-p\tport_number\n-a\thostname/IP address\n",app);
 }
 
-// State definition
+// Topology state structure
 GpsApp::TopologyState state;
 
 // Enable the console logging provided by Os::Log
@@ -22,16 +22,14 @@ volatile sig_atomic_t terminate = 0;
 // Handle a signal, e.g. control-C
 static void sighandler(int signum) {
     // Call the teardown function
-    // This causes the Linux timer to quit
     GpsApp::teardown(state);
     terminate = 1;
 }
 
-// pseudo clock; replace with clock on target
 void run1cycle() {
     // call interrupt to emulate a clock
     GpsApp::blockDrv.callIsr();
-    Os::Task::delay(1000); // 10Hz
+    Os::Task::delay(1000); //10Hz
 }
 
 void runcycles(NATIVE_INT_TYPE cycles) {
@@ -46,7 +44,6 @@ void runcycles(NATIVE_INT_TYPE cycles) {
     }
 }
 
-// Takes command line arguments to sill in state
 int main(int argc, char* argv[]) {
     U32 port_number = 0; // Invalid port number forced
     I32 option;
@@ -82,7 +79,7 @@ int main(int argc, char* argv[]) {
     // console prompt for quit
     (void) printf("Hit Ctrl-C to quit\n");
 
-    // run setup with state
+    // run setup
     state = GpsApp::TopologyState(hostname, port_number,device);
     GpsApp::setup(state);
 
@@ -90,21 +87,15 @@ int main(int argc, char* argv[]) {
     signal(SIGINT,sighandler);
     signal(SIGTERM,sighandler);
 
+    // run block driver timer
     int cycle = 0;
-
     while (!terminate) {
-        (void) printf("Cycle %d\n",cycle);
+      // (void) printf("Cycle %d\n",cycle);
         runcycles(1);
         cycle++;
     }
-
-    // Start the Linux timer.
-    // The timer runs on the main thread until it quits
-    // in the teardown function, called from the signal
-    // handler.
-    //GpsApp::linuxTimer.startTimer(10); //!< 10Hz
-
-    // Signal handler was called, and linuxTimer quit.
+    
+    // Signal handler was called, and block driver quit.
     // Time to exit the program.
     // Give time for threads to exit.
     (void) printf("Waiting for threads...\n");

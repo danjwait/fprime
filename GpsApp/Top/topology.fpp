@@ -36,7 +36,6 @@ module GpsApp {
     instance fileUplink
     instance fileUplinkBufferManager
     instance linuxTime
-    #instance linuxTimer
     instance GPS_SERIAL
     instance GPS
     instance prmDb
@@ -49,6 +48,8 @@ module GpsApp {
     instance textLogger
     instance uplink
     
+
+
     # ----------------------------------------------------------------------
     # Pattern graph specifiers
     # ----------------------------------------------------------------------
@@ -82,6 +83,7 @@ module GpsApp {
       downlink.bufferDeallocate -> fileDownlink.bufferReturn
 
       comm.deallocate -> staticMemory.bufferDeallocate[Ports_StaticMemory.downlink]
+
     }
 
     connections FaultProtection {
@@ -90,8 +92,6 @@ module GpsApp {
 
     connections RateGroups {
 
-      # Timer
-      #linuxTimer.CycleOut -> rateGroupDriverComp.CycleIn
       # Block driver
       blockDrv.CycleOut -> rateGroupDriverComp.CycleIn
 
@@ -109,8 +109,9 @@ module GpsApp {
       # Rate group 3
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup3] -> rateGroup3Comp.CycleIn
       rateGroup3Comp.RateGroupMemberOut[0] -> $health.Run
-      rateGroup3Comp.RateGroupMemberOut[1] -> fileUplinkBufferManager.schedIn
-      rateGroup3Comp.RateGroupMemberOut[2] -> blockDrv.Sched
+      rateGroup3Comp.RateGroupMemberOut[1] -> blockDrv.Sched
+      rateGroup3Comp.RateGroupMemberOut[2] -> fileUplinkBufferManager.schedIn
+
     }
 
     connections Sequencer {
@@ -131,6 +132,7 @@ module GpsApp {
       uplink.bufferOut -> fileUplink.bufferSendIn
       uplink.bufferDeallocate -> fileUplinkBufferManager.bufferSendIn
       fileUplink.bufferSendOut -> fileUplinkBufferManager.bufferSendIn
+
     }
 
     connections Gps {

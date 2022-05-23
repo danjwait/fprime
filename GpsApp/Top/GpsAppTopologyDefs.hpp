@@ -1,19 +1,19 @@
 #ifndef GpsAppTopologyDefs_HPP
 #define GpsAppTopologyDefs_HPP
 
+#include "Drv/BlockDriver/BlockDriver.hpp"
 #include "Fw/Types/MallocAllocator.hpp"
 #include "Fw/Logger/Logger.hpp"
 #include "GpsApp/Top/FppConstantsAc.hpp"
 #include "Svc/FramingProtocol/FprimeProtocol.hpp"
-#include "Drv/BlockDriver/BlockDriver.hpp"
-//#include "Svc/LinuxTimer/LinuxTimer.hpp"
 
 namespace GpsApp {
 
-  // Declare the Linux timer here so it is visible in main
-  //extern Svc::LinuxTimer linuxTimer;
   // Declare the block driver here so it is visible in main
   extern Drv::BlockDriver blockDrv;
+  
+  // Declare the Linux timer here so it is visible in main
+  //extern Svc::LinuxTimer linuxTimer;
 
   namespace Allocation {
 
