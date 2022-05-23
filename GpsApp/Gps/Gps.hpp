@@ -2,30 +2,23 @@
 // \title  Gps.hpp
 // \author djwait
 // \brief  hpp file for Gps component implementation class
-//
-// \copyright
-// Copyright 2009-2015, by the California Institute of Technology.
-// ALL RIGHTS RESERVED.  United States Government Sponsorship
-// acknowledged.
-//
 // ======================================================================
 
 #ifndef Gps_HPP
 #define Gps_HPP
 
-//#include "GpsApp/Gps/Gps.hpp"
 #include "GpsApp/Gps/GpsComponentAc.hpp"
 
 // Define memory footprint of buffers
 // Define a count of buffers & size of each.
 // Allow Gps component to manage its own buffers
-
-#define NUM_UART_BUFFERS 20 // DJW 5 per RpiDemo, 20 per Gps Demo
-#define UART_READ_BUFF_SIZE 1024 // DJW 40 per RpiDemo, 1024 per Gps Demo
+#define NUM_UART_BUFFERS 20 
+#define UART_READ_BUFF_SIZE 1024 
 
 namespace GpsApp {
+
   class Gps :
-  public GpsComponentBase
+    public GpsComponentBase
   {
 
     public:
@@ -73,18 +66,14 @@ namespace GpsApp {
       //! Construct object Gps
       //!
       Gps(
-#if FW_OBJECT_NAMES == 1
           const char *const compName /*!< The component name*/
-#else
-          void
-#endif
       );
 
       //! Initialize object Gps
       //!
       void init(
-        const NATIVE_INT_TYPE queueDepth, /*!< The queue depth*/
-        const NATIVE_INT_TYPE instance = 0 /*!< The instance number*/
+          const NATIVE_INT_TYPE queueDepth, /*!< The queue depth*/
+          const NATIVE_INT_TYPE instance = 0 /*!< The instance number*/
       );
 
       //! Destroy object Gps
@@ -101,37 +90,37 @@ namespace GpsApp {
       //!
       void serialRecv_handler(
           const NATIVE_INT_TYPE portNum, /*!< The port number*/
-          Fw::Buffer &serBuffer, /*!< Buffer containing data*/
-          Drv::SerialReadStatus &status /*!< Status of read*/
-      ) override;
+          Fw::Buffer &serBuffer, /*!< 
+      Buffer containing data
+      */
+          Drv::SerialReadStatus &status /*!< 
+      Status of read
+      */
+      );
+
+    PRIVATE:
 
       // ----------------------------------------------------------------------
       // Command handler implementations
       // ----------------------------------------------------------------------
 
       //! Implementation for REPORT_STATUS command handler
-      //! command to force an EVR reporting lock status
+      //! force an EVR reporting lock status
       void REPORT_STATUS_cmdHandler(
-        const FwOpcodeType opCode, /*!< The opcode*/
-        const U32 cmdSeq /*!< The command sequence number*/
-      ) override;
-
-      // Don't use; need LinuxSerial update to work
-      //! Implementation for SET_BAUD_RATE command handler
-      //! command to change baud rate
-      //void SET_BAUD_RATE_cmdHandler(
-      //  const FwOpcodeType opCode, /*!< The opcode*/
-      //  const U32 cmdSeq, /*!< The command sequence number*/
-      //  Gps_BaudRate BAUD /*!< the baud rate*/
-      //) override;
-      //
+          const FwOpcodeType opCode, /*!< The opcode*/
+          const U32 cmdSeq /*!< The command sequence number*/
+      );
 
       //! Implementation for COLD_START command handler
-      //! command to cause cold start on reboot
+      //! force cold start on reboot
       void COLD_START_cmdHandler(
-        const FwOpcodeType opCode, /*!< The opcode*/
-        const U32 cmdSeq /*!< The command sequence number*/
-      ) override;
+          const FwOpcodeType opCode, /*!< The opcode*/
+          const U32 cmdSeq /*!< The command sequence number*/
+      );
+
+      // ----------------------------------------------------------------------
+      // Additional member functions & variables
+      // ----------------------------------------------------------------------
 
       //! This will be called once when task starts up
       void preamble() override;
@@ -144,7 +133,8 @@ namespace GpsApp {
       Fw::Buffer m_recvBuffers[NUM_UART_BUFFERS];
       BYTE m_uartBuffers[NUM_UART_BUFFERS][UART_READ_BUFF_SIZE];
       char m_holder[UART_READ_BUFF_SIZE];
-  };
+
+    };
 
 } // end namespace GpsApp
 

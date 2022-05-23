@@ -2,21 +2,14 @@
 // \title  Gps.cpp
 // \author djwait
 // \brief  cpp file for Gps component implementation class
-//
-// \copyright
-// Copyright 2009-2015, by the California Institute of Technology.
-// ALL RIGHTS RESERVED.  United States Government Sponsorship
-// acknowledged.
-//
 // ======================================================================
 
-
+#include <cstring>
+#include <ctype.h>
 #include <GpsApp/Gps/Gps.hpp>
 #include "Fw/Types/BasicTypes.hpp"
 #include "Fw/Logger/Logger.hpp" 
 
-#include <cstring>
-#include <ctype.h>
 
 namespace GpsApp {
 
@@ -27,9 +20,8 @@ namespace GpsApp {
   Gps ::
     Gps(
         const char *const compName
-    ) :
-      GpsComponentBase(compName),
-    // initialize the lock to "false"
+    ) : GpsComponentBase(compName),
+    // initialize the lock to "false" on construction
     m_locked(false)
   {
 
@@ -44,14 +36,12 @@ namespace GpsApp {
     GpsComponentBase::init(queueDepth, instance);
   }
 
-  // The linux serial driver keeps its storage external.
-  // This means we need to supply it with some buffers to work with.
-  // This code will loop through our member variables holding buffers 
+  // The linux serial driver keeps its storage externally;
+  // this code will loop through our member variables holding buffers 
   // and send them to the linux serial driver. 'preamble' is 
   // automatically called after the system is constructed, before the 
   // system runs at steady-state. This allows for initialization code 
   // which invokes working ports
-
   void Gps :: preamble()
   {
     for (NATIVE_INT_TYPE buffer =0; buffer < NUM_UART_BUFFERS; buffer ++) {
@@ -62,7 +52,6 @@ namespace GpsApp {
       // Invoke the port to send the buffer out
       this->serialBufferOut_out(0,this->m_recvBuffers[buffer]);
     }
-    Fw::Logger::logMsg("[INFO] Preamble size: %d\n", NUM_UART_BUFFERS); // DEBUG
   }
 
   Gps ::
@@ -75,16 +64,11 @@ namespace GpsApp {
   // Handler implementations for user-defined typed input ports
   // ----------------------------------------------------------------------
 
-  // serialIn
-  // Implement a handler to respond to the serial device sending data buffer
-  // containing the GPS data. 
-  // This will handle the serial message & parse the data into telemetry
-
   void Gps ::
     serialRecv_handler(
-        const NATIVE_INT_TYPE portNum,  /*!< The port number*/
-        Fw::Buffer &serBuffer, /*!< Buffer containing data*/
-        Drv::SerialReadStatus &serial_status /*!< Serial read status*/
+        const NATIVE_INT_TYPE portNum,
+        Fw::Buffer &serBuffer,
+        Drv::SerialReadStatus &serial_status
     )
   {
     // Local variable definitions
@@ -227,7 +211,7 @@ namespace GpsApp {
     this->tlmWrite_LATITUDE(lat);
     this->tlmWrite_LONGITUDE(lon);
     this->tlmWrite_ALTITUDE(packet.altitude);
-    this->tlmWrite_VELO_KM_SEC(packet.speedKmHr/3600);
+    this->tlmWrite_VEL_KM_SEC(packet.speedKmHr/3600);
     this->tlmWrite_TRACK_TRUE_DEG(packet.trackTrue);
     this->tlmWrite_TRACK_MAG_DEG(packet.trackMag);
     this->tlmWrite_MAG_VAR_DEG(packet.magVar);
@@ -272,61 +256,6 @@ namespace GpsApp {
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
   }
 
-  /* Don't use; need LinuxSerial update to work
-  void Gps ::
-    SET_BAUD_RATE_cmdHandler(
-        const FwOpcodeType opCode, 
-        const U32 cmdSeq,
-        Gps_BaudRate BAUD 
-    )
-  {
-    // Local variable definitions
-    // string argument
-    std::string baudString;
-    // default string, reset to default 9600 baud
-    //char cmdString[24];
-    // build the command based on the baud rate
-    switch (BAUD.e)
-    {
-    case Gps_BaudRate::b4800 :
-      baudString = "$PMTK251,4800*14\r\n";
-      break;
-    case Gps_BaudRate::b9600 :
-      baudString = "$PMTK251,9600*17\r\n";
-      break;
-    //case Gps_BaudRate::b14400 : // this breaks my RPi
-    //  baudString = "$PMTK251,14400*29\r\n";
-    //  break;
-    case Gps_BaudRate::b19200 :
-      baudString = "$PMTK251,19200*22\r\n";
-      break;
-    case Gps_BaudRate::b38400 :
-      baudString = "$PMTK251,38400*27\r\n";
-      break;
-    case Gps_BaudRate::b57600 :
-      baudString = "$PMTK251,57600*2C\r\n";
-      break;
-    case Gps_BaudRate::b115200 :
-      baudString = "$PMTK251,115200*1F\r\n";
-      break;
-    default:
-      baudString = "$PMTK251,0*28\r\n";
-      break;
-    }
-
-    // send the command out over serial
-    Fw::Buffer txt;
-    txt.setSize(baudString.length());
-    txt.setData(reinterpret_cast<U8*>(const_cast<char*>(baudString.c_str())));
-    this->serialWrite_out(0, txt);
-    
-
-    // pick the command string to send based on baud rate
-    // complete command
-    this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
-  }
-  */
-
   void Gps ::
     COLD_START_cmdHandler(
         const FwOpcodeType opCode,
@@ -345,6 +274,5 @@ namespace GpsApp {
     // complete command
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
   }
-
 
 } // end namespace GpsApp
