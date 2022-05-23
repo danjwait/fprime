@@ -156,11 +156,6 @@ module GpsApp {
     stack size Default.stackSize \
     priority 90
 
-  instance pingRcvr: Ref.PingReceiver base id 0x0A00 \
-    queue size Default.queueSize \
-    stack size Default.stackSize \
-    priority 90
-
   instance eventLogger: Svc.ActiveLogger base id 0x0B00 \
     queue size Default.queueSize \
     stack size Default.stackSize \

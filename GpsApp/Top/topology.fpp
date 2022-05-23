@@ -46,7 +46,7 @@ module GpsApp {
     #instance mathReceiver
     instance gpsSerial
     instance GPS
-    instance pingRcvr
+    #instance pingRcvr
     instance prmDb
     instance rateGroup1Comp
     instance rateGroup2Comp
