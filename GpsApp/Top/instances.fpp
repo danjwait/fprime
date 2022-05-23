@@ -216,21 +216,6 @@ module GpsApp {
 
   }
 
-  instance SG1: Ref.SignalGen base id 0x2100 \
-    queue size Default.queueSize
-
-  instance SG2: Ref.SignalGen base id 0x2200 \
-    queue size Default.queueSize
-
-  instance SG3: Ref.SignalGen base id 0x2300 \
-    queue size Default.queueSize
-
-  instance SG4: Ref.SignalGen base id 0x2400 \
-    queue size Default.queueSize
-
-  instance SG5: Ref.SignalGen base id 0x2500 \
-    queue size Default.queueSize
-
   instance sendBuffComp: Ref.SendBuff base id 0x2600 \
     queue size Default.queueSize
 

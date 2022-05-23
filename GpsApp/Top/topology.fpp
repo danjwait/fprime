@@ -22,11 +22,11 @@ module GpsApp {
     # ----------------------------------------------------------------------
 
     instance $health
-    instance SG1
-    instance SG2
-    instance SG3
-    instance SG4
-    instance SG5
+    #instance SG1
+    #instance SG2
+    #instance SG3
+    #instance SG4
+    #instance SG5
     instance blockDrv
     instance chanTlm
     instance cmdDisp
@@ -110,27 +110,27 @@ module GpsApp {
 
       # Rate group 1
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup1] -> rateGroup1Comp.CycleIn
-      rateGroup1Comp.RateGroupMemberOut[0] -> SG1.schedIn
-      rateGroup1Comp.RateGroupMemberOut[1] -> SG2.schedIn
-      rateGroup1Comp.RateGroupMemberOut[2] -> chanTlm.Run
-      rateGroup1Comp.RateGroupMemberOut[3] -> fileDownlink.Run
-      rateGroup1Comp.RateGroupMemberOut[4] -> systemResources.run
+      #rateGroup1Comp.RateGroupMemberOut[0] -> SG1.schedIn
+      #rateGroup1Comp.RateGroupMemberOut[1] -> SG2.schedIn
+      rateGroup1Comp.RateGroupMemberOut[0] -> chanTlm.Run
+      rateGroup1Comp.RateGroupMemberOut[1] -> fileDownlink.Run
+      rateGroup1Comp.RateGroupMemberOut[2] -> systemResources.run
       # rateGroup1Comp.RateGroupMemberOut[5] -> mathReceiver.schedIn
-      rateGroup1Comp.RateGroupMemberOut[5] -> uplink.schedIn
+      rateGroup1Comp.RateGroupMemberOut[3] -> uplink.schedIn
 
       # Rate group 2
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2Comp.CycleIn
       rateGroup2Comp.RateGroupMemberOut[0] -> cmdSeq.schedIn
       rateGroup2Comp.RateGroupMemberOut[1] -> sendBuffComp.SchedIn
-      rateGroup2Comp.RateGroupMemberOut[2] -> SG3.schedIn
-      rateGroup2Comp.RateGroupMemberOut[3] -> SG4.schedIn
+      #rateGroup2Comp.RateGroupMemberOut[2] -> SG3.schedIn
+      #rateGroup2Comp.RateGroupMemberOut[3] -> SG4.schedIn
 
       # Rate group 3
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup3] -> rateGroup3Comp.CycleIn
       rateGroup3Comp.RateGroupMemberOut[0] -> $health.Run
-      rateGroup3Comp.RateGroupMemberOut[1] -> SG5.schedIn
-      rateGroup3Comp.RateGroupMemberOut[2] -> blockDrv.Sched
-      rateGroup3Comp.RateGroupMemberOut[3] -> fileUplinkBufferManager.schedIn
+      #rateGroup3Comp.RateGroupMemberOut[1] -> SG5.schedIn
+      rateGroup3Comp.RateGroupMemberOut[1] -> blockDrv.Sched
+      rateGroup3Comp.RateGroupMemberOut[2] -> fileUplinkBufferManager.schedIn
 
     }
 
