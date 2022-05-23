@@ -211,8 +211,8 @@ module GpsApp {
 
   }
 
-  instance sendBuffComp: Ref.SendBuff base id 0x2600 \
-    queue size Default.queueSize
+  #instance sendBuffComp: Ref.SendBuff base id 0x2600 \
+  #  queue size Default.queueSize
 
   # ----------------------------------------------------------------------
   # Passive component instances
@@ -331,7 +331,7 @@ module GpsApp {
 
   }
 
-  instance recvBuffComp: Ref.RecvBuff base id 0x4700
+  #instance recvBuffComp: Ref.RecvBuff base id 0x4700
 
   instance staticMemory: Svc.StaticMemory base id 0x4800
 

@@ -52,8 +52,8 @@ module GpsApp {
     instance rateGroup2Comp
     instance rateGroup3Comp
     instance rateGroupDriverComp
-    instance recvBuffComp
-    instance sendBuffComp
+    #instance recvBuffComp
+    #instance sendBuffComp
     instance staticMemory
     instance systemResources
     instance textLogger
@@ -121,7 +121,7 @@ module GpsApp {
       # Rate group 2
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2Comp.CycleIn
       rateGroup2Comp.RateGroupMemberOut[0] -> cmdSeq.schedIn
-      rateGroup2Comp.RateGroupMemberOut[1] -> sendBuffComp.SchedIn
+      #rateGroup2Comp.RateGroupMemberOut[1] -> sendBuffComp.SchedIn
       #rateGroup2Comp.RateGroupMemberOut[2] -> SG3.schedIn
       #rateGroup2Comp.RateGroupMemberOut[3] -> SG4.schedIn
 
@@ -134,10 +134,10 @@ module GpsApp {
 
     }
 
-    connections Ref {
-      sendBuffComp.Data -> blockDrv.BufferIn
-      blockDrv.BufferOut -> recvBuffComp.Data
-    }
+    #connections Ref {
+    #  sendBuffComp.Data -> blockDrv.BufferIn
+    #  blockDrv.BufferOut -> recvBuffComp.Data
+    #}
 
     connections Sequencer {
       cmdSeq.comCmdOut -> cmdDisp.seqCmdBuff
