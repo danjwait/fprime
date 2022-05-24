@@ -8,13 +8,25 @@ module GpsApp {
 
     constant queueSize = 10
 
-    constant stackSize = 64 * 1024 
+    constant stackSize = 64 * 1024 # for RPI
 
   }
 
   # ----------------------------------------------------------------------
   # Active component instances
   # ----------------------------------------------------------------------
+
+  instance blockDrv: Drv.BlockDriver base id 0x0100 \
+    queue size Default.queueSize \
+    stack size Default.stackSize \
+    priority 99 \
+  {
+
+    phase Fpp.ToCpp.Phases.instances """
+    // Declared in GpsAppTopologyDefs.cpp
+    """
+
+  }
 
   instance rateGroup1Comp: Svc.ActiveRateGroup base id 0x0200 \
     queue size Default.queueSize \
@@ -144,11 +156,6 @@ module GpsApp {
     stack size Default.stackSize \
     priority 90
 
-  instance pingRcvr: Ref.PingReceiver base id 0x0A00 \
-    queue size Default.queueSize \
-    stack size Default.stackSize \
-    priority 90
-
   instance eventLogger: Svc.ActiveLogger base id 0x0B00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
@@ -174,7 +181,7 @@ module GpsApp {
     """
 
   }
-
+  
   instance GPS: GpsApp.Gps base id 0x0F00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
@@ -203,12 +210,6 @@ module GpsApp {
     """
 
   }
-
-  instance sendBuffComp: Ref.SendBuff base id 0x2600 \
-    queue size Default.queueSize
-
-  instance mathReceiver: Ref.MathReceiver base id 0x2700 \
-    queue size Default.queueSize
 
   # ----------------------------------------------------------------------
   # Passive component instances
@@ -311,19 +312,6 @@ module GpsApp {
 
   }
 
-  instance linuxTimer: Svc.LinuxTimer base id 0x1600 \
-  {
-
-    phase Fpp.ToCpp.Phases.instances """
-    //Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
-    """
-
-    phase Fpp.ToCpp.Phases.stopTasks """
-    linuxTimer.quit();
-    """
-
-  }
-
   instance rateGroupDriverComp: Svc.RateGroupDriver base id 0x4600 {
 
     phase Fpp.ToCpp.Phases.configObjects """
@@ -339,8 +327,6 @@ module GpsApp {
     """
 
   }
-
-  instance recvBuffComp: Ref.RecvBuff base id 0x4700
 
   instance staticMemory: Svc.StaticMemory base id 0x4800
 
@@ -387,7 +373,7 @@ module GpsApp {
       GPS_SERIAL.startReadThread();
     }
     else {
-      Fw::Logger::logMsg("[ERROR] Initialization failed; not starting GPS UART driver\\n");
+      Fw::Logger::logMsg("[ERROR] Initialization failed; not starting UART driver\\n");
     }
     """
 

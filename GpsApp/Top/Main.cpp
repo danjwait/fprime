@@ -1,6 +1,8 @@
 #include <getopt.h>
 #include <cstdlib>
 #include <ctype.h>
+#include <signal.h>
+#include <cstdio>
 
 #include <Os/Log.hpp>
 #include <GpsApp/Top/GpsAppTopologyAc.hpp>
@@ -9,10 +11,9 @@ void print_usage(const char* app) {
     (void) printf("Usage: ./%s [options]\n-p\tport_number\n-a\thostname/IP address\n",app);
 }
 
-#include <signal.h>
-#include <cstdio>
-
+// Topology state structure
 GpsApp::TopologyState state;
+
 // Enable the console logging provided by Os::Log
 Os::Log logger;
 
@@ -21,28 +22,27 @@ volatile sig_atomic_t terminate = 0;
 // Handle a signal, e.g. control-C
 static void sighandler(int signum) {
     // Call the teardown function
-    // This causes the Linux timer to quit
     GpsApp::teardown(state);
     terminate = 1;
 }
 
-//void run1cycle() {
-//    // call interrupt to emulate a clock
-//    GpsApp::blockDrv.callIsr();
-//    Os::Task::delay(1000); //10Hz
-//}
+void run1cycle() {
+    // call interrupt to emulate a clock
+    GpsApp::blockDrv.callIsr();
+    Os::Task::delay(1000); //10Hz
+}
 
-//void runcycles(NATIVE_INT_TYPE cycles) {
-//    if (cycles == -1) {
-//        while (true) {
-//            run1cycle();
-//        }
-//    }
-//
-//    for (NATIVE_INT_TYPE cycle = 0; cycle < cycles; cycle++) {
-//        run1cycle();
-//    }
-//}
+void runcycles(NATIVE_INT_TYPE cycles) {
+    if (cycles == -1) {
+        while (true) {
+            run1cycle();
+        }
+    }
+
+    for (NATIVE_INT_TYPE cycle = 0; cycle < cycles; cycle++) {
+        run1cycle();
+    }
+}
 
 int main(int argc, char* argv[]) {
     U32 port_number = 0; // Invalid port number forced
@@ -87,13 +87,15 @@ int main(int argc, char* argv[]) {
     signal(SIGINT,sighandler);
     signal(SIGTERM,sighandler);
 
-    // Start the Linux timer.
-    // The timer runs on the main thread until it quits
-    // in the teardown function, called from the signal
-    // handler.
-    GpsApp::linuxTimer.startTimer(1000); //!< 10Hz
-
-    // Signal handler was called, and linuxTimer quit.
+    // run block driver timer
+    int cycle = 0;
+    while (!terminate) {
+      // (void) printf("Cycle %d\n",cycle);
+        runcycles(1);
+        cycle++;
+    }
+    
+    // Signal handler was called, and block driver quit.
     // Time to exit the program.
     // Give time for threads to exit.
     (void) printf("Waiting for threads...\n");
