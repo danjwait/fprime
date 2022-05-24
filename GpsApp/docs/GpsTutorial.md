@@ -86,9 +86,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/../cmake/FPrime-Code.cmake")
 # core components in the topology, which is also added here.
 ##
 # Add component subdirectories
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../Ref/RecvBuffApp/")
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../Ref/SendBuffApp/")
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Gps")
 
 # Add Topology subdirectory
@@ -114,9 +111,9 @@ target_compile_options("${PROJECT_NAME}" PUBLIC -Wno-unused-parameter)
 target_compile_options("${PROJECT_NAME}" PUBLIC -Wundef)
 set_property(TARGET "${PROJECT_NAME}" PROPERTY CXX_STANDARD 11)
 ```
-Note that the top-level `CMakeLists.txt` covers the name of the application (`project(GpsApp VERSION 1.0.0 LANGUAGES C CXX)`), the import of the F' core, and then inlcudes the path to any componet subdirectorys. In this case we'll include `add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")` among others from within the `/Ref` direcotry, as well as the `/GpsApp/Gps` component we will develop. The top-level `CMakeLists.txt` also sets the path to the topology and the `Main.cpp` file.
+Note that the top-level `CMakeLists.txt` covers the name of the application (`project(GpsApp VERSION 1.0.0 LANGUAGES C CXX)`), the import of the F' core, and then inlcudes the path to any componet subdirectorys. In this case we'll include `add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")` among others from within the `/Ref` direcotry, as well as the `/GpsApp/Gps` component we will develop. The top-level `CMakeLists.txt` also sets the path to the topology and the `Main.cpp` file (within the `/GpsApp/Top` directory, in this case).
 
-## The GpsApp Topology
+## Create the GpsApp Topology
 This tutorial will walk through some more steps involved in working with the application topology within the `/GpsApp/Top` directory. The steps are:
  - Define and create the FPP models for the topology (instances.fpp and topology.fpp)
  - Create the Main.cpp file
@@ -145,13 +142,25 @@ module GpsApp {
 
     constant queueSize = 10
 
-    constant stackSize = 64 * 1024 
+    constant stackSize = 64 * 1024 # for RPI
 
   }
 
   # ----------------------------------------------------------------------
   # Active component instances
   # ----------------------------------------------------------------------
+
+  instance blockDrv: Drv.BlockDriver base id 0x0100 \
+    queue size Default.queueSize \
+    stack size Default.stackSize \
+    priority 99 \
+  {
+
+    phase Fpp.ToCpp.Phases.instances """
+    // Declared in GpsAppTopologyDefs.cpp
+    """
+
+  }
 
   instance rateGroup1Comp: Svc.ActiveRateGroup base id 0x0200 \
     queue size Default.queueSize \
@@ -281,11 +290,6 @@ module GpsApp {
     stack size Default.stackSize \
     priority 90
 
-  instance pingRcvr: Ref.PingReceiver base id 0x0A00 \
-    queue size Default.queueSize \
-    stack size Default.stackSize \
-    priority 90
-
   instance eventLogger: Svc.ActiveLogger base id 0x0B00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
@@ -311,7 +315,7 @@ module GpsApp {
     """
 
   }
-
+  
   instance GPS: GpsApp.Gps base id 0x0F00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
@@ -340,12 +344,6 @@ module GpsApp {
     """
 
   }
-
-  instance sendBuffComp: Ref.SendBuff base id 0x2600 \
-    queue size Default.queueSize
-
-  instance mathReceiver: Ref.MathReceiver base id 0x2700 \
-    queue size Default.queueSize
 
   # ----------------------------------------------------------------------
   # Passive component instances
@@ -448,19 +446,6 @@ module GpsApp {
 
   }
 
-  instance linuxTimer: Svc.LinuxTimer base id 0x1600 \
-  {
-
-    phase Fpp.ToCpp.Phases.instances """
-    //Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
-    """
-
-    phase Fpp.ToCpp.Phases.stopTasks """
-    linuxTimer.quit();
-    """
-
-  }
-
   instance rateGroupDriverComp: Svc.RateGroupDriver base id 0x4600 {
 
     phase Fpp.ToCpp.Phases.configObjects """
@@ -476,8 +461,6 @@ module GpsApp {
     """
 
   }
-
-  instance recvBuffComp: Ref.RecvBuff base id 0x4700
 
   instance staticMemory: Svc.StaticMemory base id 0x4800
 
@@ -524,7 +507,7 @@ module GpsApp {
       GPS_SERIAL.startReadThread();
     }
     else {
-      Fw::Logger::logMsg("[ERROR] Initialization failed; not starting GPS UART driver\\n");
+      Fw::Logger::logMsg("[ERROR] Initialization failed; not starting UART driver\\n");
     }
     """
 
@@ -565,6 +548,7 @@ module GpsApp {
     # ----------------------------------------------------------------------
 
     instance $health
+    instance blockDrv
     instance chanTlm
     instance cmdDisp
     instance cmdSeq
@@ -578,22 +562,20 @@ module GpsApp {
     instance fileUplink
     instance fileUplinkBufferManager
     instance linuxTime
-    instance linuxTimer
     instance GPS_SERIAL
     instance GPS
-    instance pingRcvr
     instance prmDb
     instance rateGroup1Comp
     instance rateGroup2Comp
     instance rateGroup3Comp
     instance rateGroupDriverComp
-    instance recvBuffComp
-    instance sendBuffComp
     instance staticMemory
     instance systemResources
     instance textLogger
     instance uplink
     
+
+
     # ----------------------------------------------------------------------
     # Pattern graph specifiers
     # ----------------------------------------------------------------------
@@ -636,8 +618,8 @@ module GpsApp {
 
     connections RateGroups {
 
-      # Timer
-      linuxTimer.CycleOut -> rateGroupDriverComp.CycleIn
+      # Block driver
+      blockDrv.CycleOut -> rateGroupDriverComp.CycleIn
 
       # Rate group 1
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup1] -> rateGroup1Comp.CycleIn
@@ -649,12 +631,12 @@ module GpsApp {
       # Rate group 2
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2Comp.CycleIn
       rateGroup2Comp.RateGroupMemberOut[0] -> cmdSeq.schedIn
-      rateGroup2Comp.RateGroupMemberOut[1] -> sendBuffComp.SchedIn
 
       # Rate group 3
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup3] -> rateGroup3Comp.CycleIn
       rateGroup3Comp.RateGroupMemberOut[0] -> $health.Run
-      rateGroup3Comp.RateGroupMemberOut[1] -> fileUplinkBufferManager.schedIn
+      rateGroup3Comp.RateGroupMemberOut[1] -> blockDrv.Sched
+      rateGroup3Comp.RateGroupMemberOut[2] -> fileUplinkBufferManager.schedIn
 
     }
 
@@ -698,16 +680,19 @@ Open the `GpsAppTopologyDefs.hpp` file and fill in the following content:
 #ifndef GpsAppTopologyDefs_HPP
 #define GpsAppTopologyDefs_HPP
 
+#include "Drv/BlockDriver/BlockDriver.hpp"
 #include "Fw/Types/MallocAllocator.hpp"
 #include "Fw/Logger/Logger.hpp"
 #include "GpsApp/Top/FppConstantsAc.hpp"
 #include "Svc/FramingProtocol/FprimeProtocol.hpp"
-#include "Svc/LinuxTimer/LinuxTimer.hpp"
 
 namespace GpsApp {
 
+  // Declare the block driver here so it is visible in main
+  extern Drv::BlockDriver blockDrv;
+  
   // Declare the Linux timer here so it is visible in main
-  extern Svc::LinuxTimer linuxTimer;
+  //extern Svc::LinuxTimer linuxTimer;
 
   namespace Allocation {
 
@@ -750,6 +735,7 @@ namespace GpsApp {
 
   // Health ping entries
   namespace PingEntries {
+    namespace blockDrv { enum { WARN = 3, FATAL = 5 }; }
     namespace chanTlm { enum { WARN = 3, FATAL = 5 }; }
     namespace cmdDisp { enum { WARN = 3, FATAL = 5 }; }
     namespace cmdSeq { enum { WARN = 3, FATAL = 5 }; }
@@ -757,7 +743,6 @@ namespace GpsApp {
     namespace fileDownlink { enum { WARN = 3, FATAL = 5 }; }
     namespace fileManager { enum { WARN = 3, FATAL = 5 }; }
     namespace fileUplink { enum { WARN = 3, FATAL = 5 }; }
-    namespace pingRcvr { enum { WARN = 3, FATAL = 5 }; }
     namespace prmDb { enum { WARN = 3, FATAL = 5 }; }
     namespace rateGroup1Comp { enum { WARN = 3, FATAL = 5 }; }
     namespace rateGroup2Comp { enum { WARN = 3, FATAL = 5 }; }
@@ -791,7 +776,7 @@ namespace GpsApp {
 
   }
 
-  Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
+  Drv::BlockDriver blockDrv(FW_OPTIONAL_NAME("blockDrv"));
 
 }
 ```
@@ -804,6 +789,8 @@ Open the `Main.cpp` file and fill in the following content:
 #include <getopt.h>
 #include <cstdlib>
 #include <ctype.h>
+#include <signal.h>
+#include <cstdio>
 
 #include <Os/Log.hpp>
 #include <GpsApp/Top/GpsAppTopologyAc.hpp>
@@ -812,10 +799,9 @@ void print_usage(const char* app) {
     (void) printf("Usage: ./%s [options]\n-p\tport_number\n-a\thostname/IP address\n",app);
 }
 
-#include <signal.h>
-#include <cstdio>
-
+// Topology state structure
 GpsApp::TopologyState state;
+
 // Enable the console logging provided by Os::Log
 Os::Log logger;
 
@@ -824,9 +810,14 @@ volatile sig_atomic_t terminate = 0;
 // Handle a signal, e.g. control-C
 static void sighandler(int signum) {
     // Call the teardown function
-    // This causes the Linux timer to quit
     GpsApp::teardown(state);
     terminate = 1;
+}
+
+void run1cycle() {
+    // call interrupt to emulate a clock
+    GpsApp::blockDrv.callIsr();
+    Os::Task::delay(1000); //10Hz
 }
 
 void runcycles(NATIVE_INT_TYPE cycles) {
@@ -884,13 +875,15 @@ int main(int argc, char* argv[]) {
     signal(SIGINT,sighandler);
     signal(SIGTERM,sighandler);
 
-    // Start the Linux timer.
-    // The timer runs on the main thread until it quits
-    // in the teardown function, called from the signal
-    // handler.
-    GpsApp::linuxTimer.startTimer(1000); //!< 10Hz
-
-    // Signal handler was called, and linuxTimer quit.
+    // run block driver timer
+    int cycle = 0;
+    while (!terminate) {
+      // (void) printf("Cycle %d\n",cycle);
+        runcycles(1);
+        cycle++;
+    }
+    
+    // Signal handler was called, and block driver quit.
     // Time to exit the program.
     // Give time for threads to exit.
     (void) printf("Waiting for threads...\n");
@@ -1091,13 +1084,14 @@ This is the complete list of telemetry parameters that will be output by the Gps
 
 Note that we are not including the GPS time or date relayed by the device; how to work with that data would be something you should work with your architecture.
 
-We will leave the `params.fppi` file blank for this tutorial.
+We will leave the `param.fppi` file blank for this tutorial.
 
 Open the `CMakeLists.txt` file and add the following contents:
 ```
 # Register the standard build
 set(SOURCE_FILES
 	"${CMAKE_CURRENT_LIST_DIR}/Gps.fpp"
+	"${CMAKE_CURRENT_LIST_DIR}/Gps.cpp"
 )
 register_fprime_module()
 ```
@@ -1105,39 +1099,224 @@ register_fprime_module()
 ### Impliment the model files
 In `/GpsApp` directory run `fprime-util generate` to generate the build cache files for the native system, and then `fprime-util generate raspberrypi` for the Raspberry Pi. 
 
-In the `/GpsApp/Gps` directory, rename the autogenerted files
+Change into the `/GpsApp/Gps` component directory and run the implimentation command `fprime-util impl` to create the stub implimentation of the Gps component. There should be two new files in the `/GpsApp/Gps` directory:
+ - `GpsComponentImpl.hpp-template`
+ - `GpsComponentImpl.cpp-template`
 
-### Complete the Gps Implimentation
-Open the `Gps.hpp` file and add the following contents:
+Rename the files for the components (we'll use these names; please work with your team for your prefered component naming):
+```
+mv GpsComponentImpl.hpp-template Gps.hpp
+mv GpsComponentImpl.cpp-template Gps.cpp
+```
+The new stub implimentation files should build, so test that before filling out the stubs by running the build command(s):
+```
+fprime-util build --jobs 8
+fprime-util build raspberrypi --jobs 8
+```
+The first command builds on the host machine OS, the second for the Raspberry Pi. Note the `--jobs` option is how many cores to run on the host, per the note in the [Math Component Tutorial](fprime-util build raspberrypi --jobs 8). 
+
+The stubs should look like this; first the Gps.hpp:
 ```c++
 // ======================================================================
 // \title  Gps.hpp
 // \author djwait
 // \brief  hpp file for Gps component implementation class
-//
-// \copyright
-// Copyright 2009-2015, by the California Institute of Technology.
-// ALL RIGHTS RESERVED.  United States Government Sponsorship
-// acknowledged.
-//
 // ======================================================================
 
 #ifndef Gps_HPP
 #define Gps_HPP
 
-//#include "GpsApp/Gps/Gps.hpp"
 #include "GpsApp/Gps/GpsComponentAc.hpp"
 
 // Define memory footprint of buffers
 // Define a count of buffers & size of each.
 // Allow Gps component to manage its own buffers
-
-#define NUM_UART_BUFFERS 20 // DJW 5 per RpiDemo, 20 per Gps Demo
-#define UART_READ_BUFF_SIZE 1024 // DJW 40 per RpiDemo, 1024 per Gps Demo
+#define NUM_UART_BUFFERS 5 
+#define UART_READ_BUFF_SIZE 40 
 
 namespace GpsApp {
+
   class Gps :
-  public GpsComponentBase
+    public GpsComponentBase
+  {
+
+    public:
+
+      // ----------------------------------------------------------------------
+      // Construction, initialization, and destruction
+      // ----------------------------------------------------------------------
+
+      //! Construct object Gps
+      //!
+      Gps(
+          const char *const compName /*!< The component name*/
+      );
+
+      //! Initialize object Gps
+      //!
+      void init(
+          const NATIVE_INT_TYPE queueDepth, /*!< The queue depth*/
+          const NATIVE_INT_TYPE instance = 0 /*!< The instance number*/
+      );
+
+      //! Destroy object Gps
+      //!
+      ~Gps();
+
+    PRIVATE:
+
+      // ----------------------------------------------------------------------
+      // Handler implementations for user-defined typed input ports
+      // ----------------------------------------------------------------------
+
+      //! Handler implementation for serialRecv
+      //!
+      void serialRecv_handler(
+          const NATIVE_INT_TYPE portNum, /*!< The port number*/
+          Fw::Buffer &serBuffer, /*!< 
+      Buffer containing data
+      */
+          Drv::SerialReadStatus &status /*!< 
+      Status of read
+      */
+      );
+
+    PRIVATE:
+
+      // ----------------------------------------------------------------------
+      // Command handler implementations
+      // ----------------------------------------------------------------------
+
+      //! Implementation for REPORT_STATUS command handler
+      //! force an EVR reporting lock status
+      void REPORT_STATUS_cmdHandler(
+          const FwOpcodeType opCode, /*!< The opcode*/
+          const U32 cmdSeq /*!< The command sequence number*/
+      );
+
+      //! Implementation for COLD_START command handler
+      //! force cold start on reboot
+      void COLD_START_cmdHandler(
+          const FwOpcodeType opCode, /*!< The opcode*/
+          const U32 cmdSeq /*!< The command sequence number*/
+      );
+
+
+    };
+
+} // end namespace GpsApp
+
+#endif
+
+```
+and the Gps.cpp:
+```c++
+// ======================================================================
+// \title  Gps.cpp
+// \author djwait
+// \brief  cpp file for Gps component implementation class
+// ======================================================================
+
+
+#include <GpsApp/Gps/Gps.hpp>
+#include "Fw/Types/BasicTypes.hpp"
+
+namespace GpsApp {
+
+  // ----------------------------------------------------------------------
+  // Construction, initialization, and destruction
+  // ----------------------------------------------------------------------
+
+  Gps ::
+    Gps(
+        const char *const compName
+    ) : GpsComponentBase(compName)
+  {
+
+  }
+
+  void Gps ::
+    init(
+        const NATIVE_INT_TYPE queueDepth,
+        const NATIVE_INT_TYPE instance
+    )
+  {
+    GpsComponentBase::init(queueDepth, instance);
+  }
+
+  Gps ::
+    ~Gps()
+  {
+
+  }
+
+  // ----------------------------------------------------------------------
+  // Handler implementations for user-defined typed input ports
+  // ----------------------------------------------------------------------
+
+  void Gps ::
+    serialRecv_handler(
+        const NATIVE_INT_TYPE portNum,
+        Fw::Buffer &serBuffer,
+        Drv::SerialReadStatus &status
+    )
+  {
+    // TODO
+  }
+
+  // ----------------------------------------------------------------------
+  // Command handler implementations
+  // ----------------------------------------------------------------------
+
+  void Gps ::
+    REPORT_STATUS_cmdHandler(
+        const FwOpcodeType opCode,
+        const U32 cmdSeq
+    )
+  {
+    // TODO
+    this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
+  }
+
+  void Gps ::
+    COLD_START_cmdHandler(
+        const FwOpcodeType opCode,
+        const U32 cmdSeq
+    )
+  {
+    // TODO
+    this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
+  }
+
+} // end namespace GpsApp
+```
+
+### Complete the Gps Implimentation
+Now we will have to fill in the code that is stubbed out in the stub files. Look for the `// TODO` comments in the autogenerated files.
+
+Open the `Gps.hpp` file and add the conents for `struct GpsPacket` and `Additional member functions & variables`:
+```c++
+// ======================================================================
+// \title  Gps.hpp
+// \author djwait
+// \brief  hpp file for Gps component implementation class
+// ======================================================================
+
+#ifndef Gps_HPP
+#define Gps_HPP
+
+#include "GpsApp/Gps/GpsComponentAc.hpp"
+
+// Define memory footprint of buffers
+// Define a count of buffers & size of each.
+// Allow Gps component to manage its own buffers
+#define NUM_UART_BUFFERS 20 
+#define UART_READ_BUFF_SIZE 1024 
+
+namespace GpsApp {
+
+  class Gps :
+    public GpsComponentBase
   {
 
     public:
@@ -1185,18 +1364,14 @@ namespace GpsApp {
       //! Construct object Gps
       //!
       Gps(
-#if FW_OBJECT_NAMES == 1
           const char *const compName /*!< The component name*/
-#else
-          void
-#endif
       );
 
       //! Initialize object Gps
       //!
       void init(
-        const NATIVE_INT_TYPE queueDepth, /*!< The queue depth*/
-        const NATIVE_INT_TYPE instance = 0 /*!< The instance number*/
+          const NATIVE_INT_TYPE queueDepth, /*!< The queue depth*/
+          const NATIVE_INT_TYPE instance = 0 /*!< The instance number*/
       );
 
       //! Destroy object Gps
@@ -1213,37 +1388,37 @@ namespace GpsApp {
       //!
       void serialRecv_handler(
           const NATIVE_INT_TYPE portNum, /*!< The port number*/
-          Fw::Buffer &serBuffer, /*!< Buffer containing data*/
-          Drv::SerialReadStatus &status /*!< Status of read*/
-      ) override;
+          Fw::Buffer &serBuffer, /*!< 
+      Buffer containing data
+      */
+          Drv::SerialReadStatus &status /*!< 
+      Status of read
+      */
+      );
+
+    PRIVATE:
 
       // ----------------------------------------------------------------------
       // Command handler implementations
       // ----------------------------------------------------------------------
 
       //! Implementation for REPORT_STATUS command handler
-      //! command to force an EVR reporting lock status
+      //! force an EVR reporting lock status
       void REPORT_STATUS_cmdHandler(
-        const FwOpcodeType opCode, /*!< The opcode*/
-        const U32 cmdSeq /*!< The command sequence number*/
-      ) override;
-
-      // Don't use; need LinuxSerial update to work
-      //! Implementation for SET_BAUD_RATE command handler
-      //! command to change baud rate
-      //void SET_BAUD_RATE_cmdHandler(
-      //  const FwOpcodeType opCode, /*!< The opcode*/
-      //  const U32 cmdSeq, /*!< The command sequence number*/
-      //  Gps_BaudRate BAUD /*!< the baud rate*/
-      //) override;
-      //
+          const FwOpcodeType opCode, /*!< The opcode*/
+          const U32 cmdSeq /*!< The command sequence number*/
+      );
 
       //! Implementation for COLD_START command handler
-      //! command to cause cold start on reboot
+      //! force cold start on reboot
       void COLD_START_cmdHandler(
-        const FwOpcodeType opCode, /*!< The opcode*/
-        const U32 cmdSeq /*!< The command sequence number*/
-      ) override;
+          const FwOpcodeType opCode, /*!< The opcode*/
+          const U32 cmdSeq /*!< The command sequence number*/
+      );
+
+      // ----------------------------------------------------------------------
+      // Additional member functions & variables
+      // ----------------------------------------------------------------------
 
       //! This will be called once when task starts up
       void preamble() override;
@@ -1256,36 +1431,29 @@ namespace GpsApp {
       Fw::Buffer m_recvBuffers[NUM_UART_BUFFERS];
       BYTE m_uartBuffers[NUM_UART_BUFFERS][UART_READ_BUFF_SIZE];
       char m_holder[UART_READ_BUFF_SIZE];
-  };
+
+    };
 
 } // end namespace GpsApp
 
 #endif
 ```
+The autocoding sets up the Gps.hpp file; we only needed to add those sections that we will use in the Gps.cpp file.
 
-TODO - discussion 
-
-Open the `Gps.cpp` file and add the following contents:
+Open the `Gps.cpp` file and add the following contents where you see the `// TODO` entries:
 ```c++
 // ======================================================================
 // \title  Gps.cpp
 // \author djwait
 // \brief  cpp file for Gps component implementation class
-//
-// \copyright
-// Copyright 2009-2015, by the California Institute of Technology.
-// ALL RIGHTS RESERVED.  United States Government Sponsorship
-// acknowledged.
-//
 // ======================================================================
 
-
+#include <cstring>
+#include <ctype.h>
 #include <GpsApp/Gps/Gps.hpp>
 #include "Fw/Types/BasicTypes.hpp"
 #include "Fw/Logger/Logger.hpp" 
 
-#include <cstring>
-#include <ctype.h>
 
 namespace GpsApp {
 
@@ -1296,9 +1464,8 @@ namespace GpsApp {
   Gps ::
     Gps(
         const char *const compName
-    ) :
-      GpsComponentBase(compName),
-    // initialize the lock to "false"
+    ) : GpsComponentBase(compName),
+    // initialize the lock to "false" on construction
     m_locked(false)
   {
 
@@ -1313,14 +1480,12 @@ namespace GpsApp {
     GpsComponentBase::init(queueDepth, instance);
   }
 
-  // The linux serial driver keeps its storage external.
-  // This means we need to supply it with some buffers to work with.
-  // This code will loop through our member variables holding buffers 
+  // The linux serial driver keeps its storage externally;
+  // this code will loop through our member variables holding buffers 
   // and send them to the linux serial driver. 'preamble' is 
   // automatically called after the system is constructed, before the 
   // system runs at steady-state. This allows for initialization code 
   // which invokes working ports
-
   void Gps :: preamble()
   {
     for (NATIVE_INT_TYPE buffer =0; buffer < NUM_UART_BUFFERS; buffer ++) {
@@ -1331,7 +1496,6 @@ namespace GpsApp {
       // Invoke the port to send the buffer out
       this->serialBufferOut_out(0,this->m_recvBuffers[buffer]);
     }
-    Fw::Logger::logMsg("[INFO] Preamble size: %d\n", NUM_UART_BUFFERS); // DEBUG
   }
 
   Gps ::
@@ -1344,16 +1508,11 @@ namespace GpsApp {
   // Handler implementations for user-defined typed input ports
   // ----------------------------------------------------------------------
 
-  // serialIn
-  // Implement a handler to respond to the serial device sending data buffer
-  // containing the GPS data. 
-  // This will handle the serial message & parse the data into telemetry
-
   void Gps ::
     serialRecv_handler(
-        const NATIVE_INT_TYPE portNum,  /*!< The port number*/
-        Fw::Buffer &serBuffer, /*!< Buffer containing data*/
-        Drv::SerialReadStatus &serial_status /*!< Serial read status*/
+        const NATIVE_INT_TYPE portNum,
+        Fw::Buffer &serBuffer,
+        Drv::SerialReadStatus &serial_status
     )
   {
     // Local variable definitions
@@ -1496,7 +1655,7 @@ namespace GpsApp {
     this->tlmWrite_LATITUDE(lat);
     this->tlmWrite_LONGITUDE(lon);
     this->tlmWrite_ALTITUDE(packet.altitude);
-    this->tlmWrite_VELO_KM_SEC(packet.speedKmHr/3600);
+    this->tlmWrite_VEL_KM_SEC(packet.speedKmHr/3600);
     this->tlmWrite_TRACK_TRUE_DEG(packet.trackTrue);
     this->tlmWrite_TRACK_MAG_DEG(packet.trackMag);
     this->tlmWrite_MAG_VAR_DEG(packet.magVar);
@@ -1541,61 +1700,6 @@ namespace GpsApp {
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
   }
 
-  /* Don't use; need LinuxSerial update to work
-  void Gps ::
-    SET_BAUD_RATE_cmdHandler(
-        const FwOpcodeType opCode, 
-        const U32 cmdSeq,
-        Gps_BaudRate BAUD 
-    )
-  {
-    // Local variable definitions
-    // string argument
-    std::string baudString;
-    // default string, reset to default 9600 baud
-    //char cmdString[24];
-    // build the command based on the baud rate
-    switch (BAUD.e)
-    {
-    case Gps_BaudRate::b4800 :
-      baudString = "$PMTK251,4800*14\r\n";
-      break;
-    case Gps_BaudRate::b9600 :
-      baudString = "$PMTK251,9600*17\r\n";
-      break;
-    //case Gps_BaudRate::b14400 : // this breaks my RPi
-    //  baudString = "$PMTK251,14400*29\r\n";
-    //  break;
-    case Gps_BaudRate::b19200 :
-      baudString = "$PMTK251,19200*22\r\n";
-      break;
-    case Gps_BaudRate::b38400 :
-      baudString = "$PMTK251,38400*27\r\n";
-      break;
-    case Gps_BaudRate::b57600 :
-      baudString = "$PMTK251,57600*2C\r\n";
-      break;
-    case Gps_BaudRate::b115200 :
-      baudString = "$PMTK251,115200*1F\r\n";
-      break;
-    default:
-      baudString = "$PMTK251,0*28\r\n";
-      break;
-    }
-
-    // send the command out over serial
-    Fw::Buffer txt;
-    txt.setSize(baudString.length());
-    txt.setData(reinterpret_cast<U8*>(const_cast<char*>(baudString.c_str())));
-    this->serialWrite_out(0, txt);
-    
-
-    // pick the command string to send based on baud rate
-    // complete command
-    this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
-  }
-  */
-
   void Gps ::
     COLD_START_cmdHandler(
         const FwOpcodeType opCode,
@@ -1615,18 +1719,41 @@ namespace GpsApp {
     this->cmdResponse_out(opCode,cmdSeq,Fw::CmdResponse::OK);
   }
 
-
 } // end namespace GpsApp
 ```
+In the above, we added the `void Gps :: preamble()` to setup the buffers to send data back and forth between the Gps component and the serial driver.
 
-TODO - discussion 
+The `void Gps :: serialRecv_handler(...)` holds a few things:
+ - a way to read in each new set of data coming across the serial driver, adding the new data to the previous data and freeing the used buffers
+ - once there is enough data to contain the messages to parse, there is the set of parsers that look for the NEMA strings in the data ([NovAtel ref](https://docs.novatel.com/OEM7/Content/Logs/Core_Logs.htm?tocpath=Commands%20%2526%20Logs%7CLogs%7CGNSS%20Logs%7C_____0)) and put that data into the GpsPacket structure
+ - if once the data is parsed, send some of that data out as telemetry
+
+The `void Gps :: REPORT_STATUS_cmdHandler(...)` generates the event message on the lock status; this is useful to check that the component is running, since it won't generate telemetry without sucessful parsing of the serial data.
+
+The `void Gps :: COLD_START_cmdHandler(...)` writes a given string out the serial interface to the GPS device to force the device to run the cold start routine, where it will start looking for GPS spacecraft with no existing knowledge.
+
+With the completed code, re-run the build commands:
+```
+fprime-util build --jobs 8
+fprime-util build raspberrypi --jobs 8
+```
+The component should build sucessfully
 
 ## Creating the GpsApp Deployment
-In the `/GpsApp` directory
-TODO fpp-check
-run `fprime-util build` and `fprime-util build raspberrypi`
+
+TODO fpp-check (doesn't work with devel version as of May 23)
+In the `/GpsApp` directory run `fprime-util build` (for native host, if you want) and `fprime-util build raspberrypi` (for the RPi, with --jobs option if you want). The output bin file will be in `/GpsApp/build-artifacts/raspberrypi/bin` and the dictionary in `/GpsApp/build-artifacts/raspberrypi/dict`
 
 ## Running the GpsApp Deployment
-TODO get to the raspberrypi
-TODO start the app `sudo GpsApp `
+### Prep the Raspberry Pi
+The the Raspberry Pi 4 has a software "mini UART" that may not work well; suggest switching the RPi over to connect to the GPS device via one of the [hardware UART devices]([url](https://www.raspberrypi.com/documentation/computers/configuration.html#configuring-uarts)). For example, to switch to UART5 (pins 12 and 13 per [datasheet]([url](https://datasheets.raspberrypi.com/rpi4/raspberry-pi-4-datasheet.pdf))) login to the RPi (ssh or directly) and add `dtoverlay=uart5` to to the /boot/config.txt file on the RPi
 
+From the host, copy the bin file over to the RPi: `/GpsApp/build-artifacts/raspberrypi/bin$ scp -r GpsApp pi@192.200.86.155:/home/pi` where `192.200.86.155` is the RPi IP address
+
+### Start the GDS and the GpsApp
+On the host, start the F' GDS `/GpsApp/build-artifacts/raspberrypi/dict$ fprime-gds -g html -n --dict GpsAppTopologyAppDictionary.xml` ; wait for the browser to open.
+
+On the RPi (either directly or over ssh) start the app ` sudo ./GpsApp -a 192.200.86.200 -p 50000 -d /dev/ttyAMA1`
+That commmand assumes the GPS device is connected to /dev/ttyAMA1 on the RPi, and the host IP is `192.200.86.200`. 
+
+Note that for WSL2 users, use the command line from the Windows terminal ` netsh interface portproxy add v4tov4 listenport=50000 listenaddress=0.0.0.0 connectport=50000 connectaddress=172.42.159.218` to forward host IP traffic to the WSL2 IP (`172.42.159.218`). The WSL2 IP address can be found in an WSL terminal with `ip addr | grep eth0`
