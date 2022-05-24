@@ -95,6 +95,21 @@ set(SOURCE_FILES "${CMAKE_CURRENT_LIST_DIR}/Top/Main.cpp")
 set(MOD_DEPS ${PROJECT_NAME}/Top)
 
 register_fprime_deployment()
+# The following compile options will only apply to the deployment executable.
+# The extra warnings trigger in core F Prime so we don't apply them there.
+target_compile_options("${PROJECT_NAME}" PUBLIC -Wall)
+target_compile_options("${PROJECT_NAME}" PUBLIC -Wextra)
+target_compile_options("${PROJECT_NAME}" PUBLIC -Werror)
+#target_compile_options("${PROJECT_NAME}" PUBLIC -Wshadow)
+target_compile_options("${PROJECT_NAME}" PUBLIC -Wconversion)
+target_compile_options("${PROJECT_NAME}" PUBLIC -Wsign-conversion)
+target_compile_options("${PROJECT_NAME}" PUBLIC -Wformat-security)
+target_compile_options("${PROJECT_NAME}" PUBLIC -Wnon-virtual-dtor)
+target_compile_options("${PROJECT_NAME}" PUBLIC -Wold-style-cast)
+target_compile_options("${PROJECT_NAME}" PUBLIC -Woverloaded-virtual)
+target_compile_options("${PROJECT_NAME}" PUBLIC -Wno-unused-parameter)
+target_compile_options("${PROJECT_NAME}" PUBLIC -Wundef)
+set_property(TARGET "${PROJECT_NAME}" PROPERTY CXX_STANDARD 11)
 ```
 Note that the top-level `CMakeLists.txt` covers the name of the application (`project(GpsApp VERSION 1.0.0 LANGUAGES C CXX)`), the import of the F' core, and then inlcudes the path to any componet subdirectorys. In this case we'll include `add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")` among others from within the `/Ref` direcotry, as well as the `/GpsApp/Gps` component we will develop. The top-level `CMakeLists.txt` also sets the path to the topology and the `Main.cpp` file (within the `/GpsApp/Top` directory, in this case).
 
@@ -127,13 +142,25 @@ module GpsApp {
 
     constant queueSize = 10
 
-    constant stackSize = 64 * 1024 
+    constant stackSize = 64 * 1024 # for RPI
 
   }
 
   # ----------------------------------------------------------------------
   # Active component instances
   # ----------------------------------------------------------------------
+
+  instance blockDrv: Drv.BlockDriver base id 0x0100 \
+    queue size Default.queueSize \
+    stack size Default.stackSize \
+    priority 99 \
+  {
+
+    phase Fpp.ToCpp.Phases.instances """
+    // Declared in GpsAppTopologyDefs.cpp
+    """
+
+  }
 
   instance rateGroup1Comp: Svc.ActiveRateGroup base id 0x0200 \
     queue size Default.queueSize \
@@ -288,7 +315,7 @@ module GpsApp {
     """
 
   }
-
+  
   instance GPS: GpsApp.Gps base id 0x0F00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
@@ -419,19 +446,6 @@ module GpsApp {
 
   }
 
-  instance linuxTimer: Svc.LinuxTimer base id 0x1600 \
-  {
-
-    phase Fpp.ToCpp.Phases.instances """
-    Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
-    """
-
-    phase Fpp.ToCpp.Phases.stopTasks """
-    linuxTimer.quit();
-    """
-
-  }
-
   instance rateGroupDriverComp: Svc.RateGroupDriver base id 0x4600 {
 
     phase Fpp.ToCpp.Phases.configObjects """
@@ -493,7 +507,7 @@ module GpsApp {
       GPS_SERIAL.startReadThread();
     }
     else {
-      Fw::Logger::logMsg("[ERROR] Initialization failed; not starting GPS UART driver\\n");
+      Fw::Logger::logMsg("[ERROR] Initialization failed; not starting UART driver\\n");
     }
     """
 
@@ -534,6 +548,7 @@ module GpsApp {
     # ----------------------------------------------------------------------
 
     instance $health
+    instance blockDrv
     instance chanTlm
     instance cmdDisp
     instance cmdSeq
@@ -547,7 +562,6 @@ module GpsApp {
     instance fileUplink
     instance fileUplinkBufferManager
     instance linuxTime
-    instance linuxTimer
     instance GPS_SERIAL
     instance GPS
     instance prmDb
@@ -560,6 +574,8 @@ module GpsApp {
     instance textLogger
     instance uplink
     
+
+
     # ----------------------------------------------------------------------
     # Pattern graph specifiers
     # ----------------------------------------------------------------------
@@ -593,6 +609,7 @@ module GpsApp {
       downlink.bufferDeallocate -> fileDownlink.bufferReturn
 
       comm.deallocate -> staticMemory.bufferDeallocate[Ports_StaticMemory.downlink]
+
     }
 
     connections FaultProtection {
@@ -601,8 +618,8 @@ module GpsApp {
 
     connections RateGroups {
 
-      # Timer
-      linuxTimer.CycleOut -> rateGroupDriverComp.CycleIn
+      # Block driver
+      blockDrv.CycleOut -> rateGroupDriverComp.CycleIn
 
       # Rate group 1
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup1] -> rateGroup1Comp.CycleIn
@@ -618,7 +635,9 @@ module GpsApp {
       # Rate group 3
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup3] -> rateGroup3Comp.CycleIn
       rateGroup3Comp.RateGroupMemberOut[0] -> $health.Run
-      rateGroup3Comp.RateGroupMemberOut[1] -> fileUplinkBufferManager.schedIn
+      rateGroup3Comp.RateGroupMemberOut[1] -> blockDrv.Sched
+      rateGroup3Comp.RateGroupMemberOut[2] -> fileUplinkBufferManager.schedIn
+
     }
 
     connections Sequencer {
@@ -639,6 +658,7 @@ module GpsApp {
       uplink.bufferOut -> fileUplink.bufferSendIn
       uplink.bufferDeallocate -> fileUplinkBufferManager.bufferSendIn
       fileUplink.bufferSendOut -> fileUplinkBufferManager.bufferSendIn
+
     }
 
     connections Gps {
@@ -660,16 +680,19 @@ Open the `GpsAppTopologyDefs.hpp` file and fill in the following content:
 #ifndef GpsAppTopologyDefs_HPP
 #define GpsAppTopologyDefs_HPP
 
+#include "Drv/BlockDriver/BlockDriver.hpp"
 #include "Fw/Types/MallocAllocator.hpp"
 #include "Fw/Logger/Logger.hpp"
 #include "GpsApp/Top/FppConstantsAc.hpp"
 #include "Svc/FramingProtocol/FprimeProtocol.hpp"
-#include "Svc/LinuxTimer/LinuxTimer.hpp"
 
 namespace GpsApp {
 
+  // Declare the block driver here so it is visible in main
+  extern Drv::BlockDriver blockDrv;
+  
   // Declare the Linux timer here so it is visible in main
-  extern Svc::LinuxTimer linuxTimer;
+  //extern Svc::LinuxTimer linuxTimer;
 
   namespace Allocation {
 
@@ -712,6 +735,7 @@ namespace GpsApp {
 
   // Health ping entries
   namespace PingEntries {
+    namespace blockDrv { enum { WARN = 3, FATAL = 5 }; }
     namespace chanTlm { enum { WARN = 3, FATAL = 5 }; }
     namespace cmdDisp { enum { WARN = 3, FATAL = 5 }; }
     namespace cmdSeq { enum { WARN = 3, FATAL = 5 }; }
@@ -746,13 +770,13 @@ namespace GpsApp {
 
   }
 
-  namespace Init {
+    namespace Init {
 
     bool status = true;
 
   }
 
-  Svc::LinuxTimer linuxTimer(FW_OPTIONAL_NAME("linuxTimer"));
+  Drv::BlockDriver blockDrv(FW_OPTIONAL_NAME("blockDrv"));
 
 }
 ```
@@ -775,7 +799,9 @@ void print_usage(const char* app) {
     (void) printf("Usage: ./%s [options]\n-p\tport_number\n-a\thostname/IP address\n",app);
 }
 
+// Topology state structure
 GpsApp::TopologyState state;
+
 // Enable the console logging provided by Os::Log
 Os::Log logger;
 
@@ -784,9 +810,26 @@ volatile sig_atomic_t terminate = 0;
 // Handle a signal, e.g. control-C
 static void sighandler(int signum) {
     // Call the teardown function
-    // This causes the Linux timer to quit
     GpsApp::teardown(state);
     terminate = 1;
+}
+
+void run1cycle() {
+    // call interrupt to emulate a clock
+    GpsApp::blockDrv.callIsr();
+    Os::Task::delay(1000); //10Hz
+}
+
+void runcycles(NATIVE_INT_TYPE cycles) {
+    if (cycles == -1) {
+        while (true) {
+            run1cycle();
+        }
+    }
+
+    for (NATIVE_INT_TYPE cycle = 0; cycle < cycles; cycle++) {
+        run1cycle();
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -832,13 +875,15 @@ int main(int argc, char* argv[]) {
     signal(SIGINT,sighandler);
     signal(SIGTERM,sighandler);
 
-    // Start the Linux timer.
-    // The timer runs on the main thread until it quits
-    // in the teardown function, called from the signal
-    // handler.
-    GpsApp::linuxTimer.startTimer(1000); //!< 10Hz
-
-    // Signal handler was called, and linuxTimer quit.
+    // run block driver timer
+    int cycle = 0;
+    while (!terminate) {
+      // (void) printf("Cycle %d\n",cycle);
+        runcycles(1);
+        cycle++;
+    }
+    
+    // Signal handler was called, and block driver quit.
     // Time to exit the program.
     // Give time for threads to exit.
     (void) printf("Waiting for threads...\n");
@@ -1046,6 +1091,7 @@ Open the `CMakeLists.txt` file and add the following contents:
 # Register the standard build
 set(SOURCE_FILES
 	"${CMAKE_CURRENT_LIST_DIR}/Gps.fpp"
+	"${CMAKE_CURRENT_LIST_DIR}/Gps.cpp"
 )
 register_fprime_module()
 ```
@@ -1264,8 +1310,8 @@ Open the `Gps.hpp` file and add the conents for `struct GpsPacket` and `Addition
 // Define memory footprint of buffers
 // Define a count of buffers & size of each.
 // Allow Gps component to manage its own buffers
-#define NUM_UART_BUFFERS 5 
-#define UART_READ_BUFF_SIZE 40 
+#define NUM_UART_BUFFERS 20 
+#define UART_READ_BUFF_SIZE 1024 
 
 namespace GpsApp {
 
@@ -1694,11 +1740,20 @@ fprime-util build raspberrypi --jobs 8
 The component should build sucessfully
 
 ## Creating the GpsApp Deployment
-In the `/GpsApp` directory
-TODO fpp-check
-run `fprime-util build` and `fprime-util build raspberrypi`
+
+TODO fpp-check (doesn't work with devel version as of May 23)
+In the `/GpsApp` directory run `fprime-util build` (for native host, if you want) and `fprime-util build raspberrypi` (for the RPi, with --jobs option if you want). The output bin file will be in `/GpsApp/build-artifacts/raspberrypi/bin` and the dictionary in `/GpsApp/build-artifacts/raspberrypi/dict`
 
 ## Running the GpsApp Deployment
-TODO get to the raspberrypi
-TODO start the app `sudo GpsApp `
+### Prep the Raspberry Pi
+The the Raspberry Pi 4 has a software "mini UART" that may not work well; suggest switching the RPi over to connect to the GPS device via one of the [hardware UART devices]([url](https://www.raspberrypi.com/documentation/computers/configuration.html#configuring-uarts)). For example, to switch to UART5 (pins 12 and 13 per [datasheet]([url](https://datasheets.raspberrypi.com/rpi4/raspberry-pi-4-datasheet.pdf))) login to the RPi (ssh or directly) and add `dtoverlay=uart5` to to the /boot/config.txt file on the RPi
 
+From the host, copy the bin file over to the RPi: `/GpsApp/build-artifacts/raspberrypi/bin$ scp -r GpsApp pi@192.200.86.155:/home/pi` where `192.200.86.155` is the RPi IP address
+
+### Start the GDS and the GpsApp
+On the host, start the F' GDS `/GpsApp/build-artifacts/raspberrypi/dict$ fprime-gds -g html -n --dict GpsAppTopologyAppDictionary.xml` ; wait for the browser to open.
+
+On the RPi (either directly or over ssh) start the app ` sudo ./GpsApp -a 192.200.86.200 -p 50000 -d /dev/ttyAMA1`
+That commmand assumes the GPS device is connected to /dev/ttyAMA1 on the RPi, and the host IP is `192.200.86.200`. 
+
+Note that for WSL2 users, use the command line from the Windows terminal ` netsh interface portproxy add v4tov4 listenport=50000 listenaddress=0.0.0.0 connectport=50000 connectaddress=172.42.159.218` to forward host IP traffic to the WSL2 IP (`172.42.159.218`). The WSL2 IP address can be found in an WSL terminal with `ip addr | grep eth0`
