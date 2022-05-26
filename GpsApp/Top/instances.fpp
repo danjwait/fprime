@@ -218,18 +218,14 @@ module GpsApp {
   @ Communications driver. May be swapped with other comm drivers like UART
   @ Note: Here we have TCP reliable uplink and UDP (low latency) downlink
   instance comm: Drv.ByteStreamDriverModel base id 0x4000 \
+    type "Drv::TcpClient" \
     at "../../Drv/TcpClient/TcpClient.hpp" \
-  {
-
-    phase Fpp.ToCpp.Phases.instances """
-    Drv::TcpClient comm(FW_OPTIONAL_NAME("comm"));
-    """
-
+    {
     phase Fpp.ToCpp.Phases.configConstants """
     enum {
       PRIORITY = 99,
       STACK_SIZE = Default::stackSize
-    };
+      };
     """
 
     phase Fpp.ToCpp.Phases.startTasks """
@@ -303,14 +299,8 @@ module GpsApp {
   }
 
   instance linuxTime: Svc.Time base id 0x4500 \
-    at "../../Svc/LinuxTime/LinuxTime.hpp" \
-  {
-
-    phase Fpp.ToCpp.Phases.instances """
-    Svc::LinuxTime linuxTime(FW_OPTIONAL_NAME("linuxTime"));
-    """
-
-  }
+    type "Svc::LinuxTime" \
+    at "../../Svc/LinuxTime/LinuxTime.hpp"
 
   instance rateGroupDriverComp: Svc.RateGroupDriver base id 0x4600 {
 
