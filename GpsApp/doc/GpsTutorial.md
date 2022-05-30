@@ -128,7 +128,7 @@ where the /Ref application had additional components (E.G. `("${CMAKE_CURRENT_LI
 
 Note that the top-level `CMakeLists.txt` also sets the path to the topology and the `Main.cpp` file (within the `/GpsApp/Top` directory, in this case).
 
-### Create the GpsApp Topology
+## Create the GpsApp Topology
 This tutorial will walk through some more steps involved in working with the application topology within the `/GpsApp/Top` directory. The steps are:
  - Define and create the FPP models for the topology (instances.fpp and topology.fpp)
  - Create the Main.cpp file
@@ -733,6 +733,8 @@ The connections in `topology.fpp` are similar to those in the Ref applicaiton, w
 ```
 The connections here include a buffer `GPS.serialBufferOut` provided by the `GPS` instance for the `GPS_SERIAL` instance to write into that the `GPS` instance will read from with the `GPS.serialRecv` port. Likewise to write into the GPS device there is a `GPS.serialWrite` port to send data to the device across the serial interface.
 
+### Create the GpsAppTopologyDefs
+
 **Complete the GpsAppTopologyDefs.hpp file:**
 Open the `GpsAppTopologyDefs.hpp` file and fill in the following content:
 ```c++
@@ -831,8 +833,7 @@ namespace GpsApp {
   }
 ```
 
-
-**Complete the Main.cpp file:**
+### Create the Main.cpp file
 Open the `Main.cpp` file and fill in the following content:
 ```c++
 #include <getopt.h>
@@ -943,7 +944,7 @@ int main(int argc, char* argv[]) {
 
 `Main.cpp` as written takes command-line arguments at start that are used to create the `TopologyState` which is passed to `GpsApp::setup`. Note in this example the serial port used to communicate with the GPS device is passed in with the `-d` option for `device`, as is the host IP address and port. It may be better for your application to set those values some other way, for example within `GpsAppTopologyDefs.hpp` or `instances.fpp` the way that the serial interface buad rate was set, for example.
 
-**Complete the CMakeLists.txt file:**
+### Complete the CMakeLists.txt for the Topology
 Open the `CMakeLists.txt` file and fill in the following content:
 ```
 ####
