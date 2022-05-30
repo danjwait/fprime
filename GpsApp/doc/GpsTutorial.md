@@ -6,14 +6,16 @@ This tutorial is intended to help you extend your F' development capabilities fr
 
 Specifically this tutorial will employ some of the provided F' components to use the data bus on an embedded target to connect another device to the target in order to start building a complete embedded system. In this case we will use a GPS device, connected over UART, to a Raspberry Pi running F' on a Linux-based OS. This will be following the Application-Manager-Driver pattern described in the [F' Users Guide](https://nasa.github.io/fprime/UsersGuide/best/app-man-drv.html) with our Gps component being the GPS device "Manager" in that pattern.
 
-This tutorial will also cover some aspects of the topology development. This process with include things like working with the `Main.cpp` file to build a TopologyState to include the GPS device, configuring components in the `instances.fpp` file, and using `include <file>.fppi` approach to break up some of the files into smaller more focused parts. In order this tutorial will walk through:
+This tutorial will also cover some aspects of the topology development. This process with include things like working with the `Main.cpp` file to build a TopologyState to include the GPS device, configuring components in the `instances.fpp` file, and using the `include <file>.fppi` approach to break up some of the files into smaller more focused parts. In order this tutorial will walk through:
  - Setting up the directory structure and topology files
  - Developing a Gps component
+ - Building and running the GpsApp
 
 Before diving in we should point out what this tutorial *is not* so that you understand the other tasks that you will need to work as you develop your own embedded system using the F' architecture and framework. This tutorial is not:
  - A GPS or GNSS tutorial; we will not cover how to use a GNSS/GPS device as part of your system. In particular we will not develop navigation or timing functions from the GPS device.
  - A systems architecture tutorial; we will not cover how to develop a set of requirements on what your system will need to do, allocate those functions to components, and then laying out those components into a topology with ports and types. 
- - A coding style or software system development guide. This tutorial has been developed by the community and as such does not follow the JPL styles used in the JPL-developed tutorials. This tutorial will also not address development techniques like configuration management, file naming/location, or unit test practices.
+ - A coding style or software system development guide. This tutorial has been developed by the community and as such does not strictly follow the JPL styles used in the JPL-developed tutorials. 
+ - This tutorial will also not address development techniques like configuration management, file naming/location, or unit test practices.
 
 We call out the above because these are tasks you really should be doing with your team as you develop your system. At best we'll include notes along the lines of the above when we get to things like "name this per your style guide."
 
@@ -22,7 +24,7 @@ We call out the above because these are tasks you really should be doing with yo
  - [MathComponent Tutorial](../MathComponent/Tutorial.md)
  - [CrossCompilation Tutorial](https://github.com/nasa/fprime/tree/devel/docs/Tutorials/CrossCompilation).
 
-As such, this tutorial builds on the prerequisites in those tutorials. This tutorial will make extensive use of the [FPP Users Guide](https://fprime-community.github.io/fpp/fpp-users-guide.html) as well, so please read through that and refer back to it as we go.
+As such, this tutorial builds on the prerequisites in those tutorials. Of note, the structure of this demo is closer to the /Ref and MathComponent tutorial than the /RPi This tutorial will make extensive use of the [FPP Users Guide](https://fprime-community.github.io/fpp/fpp-users-guide.html) as well, so please read through that and refer back to it as we go.
 
 We have written this guide making use of a [Raspberry Pi 4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) as the embedded target and the [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) as the connected device. Due to this being written during COVID times, we have not been able to procure let alone test alternate hardware sets. We do want to point out that both Raspberry Pi and Adafruit teams provide extensive documentation and support, so please consider supporting them as you work to learn embedded systems.
 
@@ -86,7 +88,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/../cmake/FPrime-Code.cmake")
 # core components in the topology, which is also added here.
 ##
 # Add component subdirectories
-add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Gps")
+add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Gps/")
 
 # Add Topology subdirectory
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Top/")
@@ -111,7 +113,15 @@ target_compile_options("${PROJECT_NAME}" PUBLIC -Wno-unused-parameter)
 target_compile_options("${PROJECT_NAME}" PUBLIC -Wundef)
 set_property(TARGET "${PROJECT_NAME}" PROPERTY CXX_STANDARD 11)
 ```
-Note that the top-level `CMakeLists.txt` covers the name of the application (`project(GpsApp VERSION 1.0.0 LANGUAGES C CXX)`), the import of the F' core, and then inlcudes the path to any componet subdirectorys. In this case we'll include `add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")` among others from within the `/Ref` direcotry, as well as the `/GpsApp/Gps` component we will develop. The top-level `CMakeLists.txt` also sets the path to the topology and the `Main.cpp` file (within the `/GpsApp/Top` directory, in this case).
+Note that the top-level `CMakeLists.txt` covers the name of the application (`project(GpsApp VERSION 1.0.0 LANGUAGES C CXX)`), the import of the F' core, and then inlcudes the path to any componet subdirectorys. In this case we'll include just the Gps component we will develop:
+```
+# Add component subdirectories
+add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Gps/")
+
+```
+where the /Ref application had addtional components (E.G. `("${CMAKE_CURRENT_LIST_DIR}/PingReceiver/")`)  from within the `/Ref` directory. If you want to add other components, this would be a place to include those. Note that you can change the file paths to incvlude other compoentns not within the /GpsApp directory; for example if we wanted the `PingReceiver` from /Ref, we would add `("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")`. 
+
+Note that the top-level `CMakeLists.txt` also sets the path to the topology and the `Main.cpp` file (within the `/GpsApp/Top` directory, in this case).
 
 ## Create the GpsApp Topology
 This tutorial will walk through some more steps involved in working with the application topology within the `/GpsApp/Top` directory. The steps are:
@@ -142,7 +152,7 @@ module GpsApp {
 
     constant queueSize = 10
 
-    constant stackSize = 64 * 1024 # for RPI
+    constant stackSize = 64 * 1024
 
   }
 
@@ -153,19 +163,12 @@ module GpsApp {
   instance blockDrv: Drv.BlockDriver base id 0x0100 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 99 \
-  {
-
-    phase Fpp.ToCpp.Phases.instances """
-    // Declared in GpsAppTopologyDefs.cpp
-    """
-
-  }
+    priority 99
 
   instance rateGroup1Comp: Svc.ActiveRateGroup base id 0x0200 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 99 \
+    priority 98 \
   {
 
     phase Fpp.ToCpp.Phases.configObjects """
@@ -185,7 +188,7 @@ module GpsApp {
   instance rateGroup2Comp: Svc.ActiveRateGroup base id 0x0300 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 99 \
+    priority 98 \
   {
 
     phase Fpp.ToCpp.Phases.configObjects """
@@ -205,7 +208,7 @@ module GpsApp {
   instance rateGroup3Comp: Svc.ActiveRateGroup base id 0x0400 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 99 \
+    priority 98 \
   {
 
     phase Fpp.ToCpp.Phases.configObjects """
@@ -225,18 +228,17 @@ module GpsApp {
   instance cmdDisp: Svc.CommandDispatcher base id 0x0500 \
     queue size 20 \
     stack size Default.stackSize \
-    priority 30
+    priority 90
 
   instance cmdSeq: Svc.CmdSequencer base id 0x0600 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 30 \
+    priority 90 \
   {
 
     phase Fpp.ToCpp.Phases.configConstants """
     enum {
-      BUFFER_SIZE = 5*1024,
-      TIMEOUT = 30
+      BUFFER_SIZE = 5*1024
     };
     """
 
@@ -257,7 +259,7 @@ module GpsApp {
   instance fileDownlink: Svc.FileDownlink base id 0x0700 \
     queue size 30 \
     stack size Default.stackSize \
-    priority 90 \
+    priority 85 \
   {
 
     phase Fpp.ToCpp.Phases.configConstants """
@@ -283,27 +285,27 @@ module GpsApp {
   instance fileManager: Svc.FileManager base id 0x0800 \
     queue size 30 \
     stack size Default.stackSize \
-    priority 90
+    priority 85
 
   instance fileUplink: Svc.FileUplink base id 0x0900 \
     queue size 30 \
     stack size Default.stackSize \
-    priority 90
+    priority 85
 
   instance eventLogger: Svc.ActiveLogger base id 0x0B00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 98
+    priority 90
 
   instance chanTlm: Svc.TlmChan base id 0x0C00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 97
+    priority 92
 
   instance prmDb: Svc.PrmDb base id 0x0D00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 96 \
+    priority 91 \
   {
 
     phase Fpp.ToCpp.Phases.instances """
@@ -315,11 +317,11 @@ module GpsApp {
     """
 
   }
-  
+
   instance GPS: GpsApp.Gps base id 0x0F00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
-    priority 99
+    priority 80
 
   # ----------------------------------------------------------------------
   # Queued component instances
@@ -352,16 +354,13 @@ module GpsApp {
   @ Communications driver. May be swapped with other comm drivers like UART
   @ Note: Here we have TCP reliable uplink and UDP (low latency) downlink
   instance comm: Drv.ByteStreamDriverModel base id 0x4000 \
+    type "Drv::TcpClient" \
     at "../../Drv/TcpClient/TcpClient.hpp" \
   {
 
-    phase Fpp.ToCpp.Phases.instances """
-    Drv::TcpClient comm(FW_OPTIONAL_NAME("comm"));
-    """
-
     phase Fpp.ToCpp.Phases.configConstants """
     enum {
-      PRIORITY = 99,
+      PRIORITY = 97,
       STACK_SIZE = Default::stackSize
     };
     """
@@ -437,24 +436,17 @@ module GpsApp {
   }
 
   instance linuxTime: Svc.Time base id 0x4500 \
-    at "../../Svc/LinuxTime/LinuxTime.hpp" \
-  {
-
-    phase Fpp.ToCpp.Phases.instances """
-    Svc::LinuxTime linuxTime(FW_OPTIONAL_NAME("linuxTime"));
-    """
-
-  }
+    type "Svc::LinuxTime" \
+    at "../../Svc/LinuxTime/LinuxTime.hpp"
 
   instance rateGroupDriverComp: Svc.RateGroupDriver base id 0x4600 {
 
     phase Fpp.ToCpp.Phases.configObjects """
     NATIVE_INT_TYPE rgDivs[Svc::RateGroupDriver::DIVIDER_SIZE] = { 1, 2, 4 };
     """
-
-    phase Fpp.ToCpp.Phases.instances """
-    Svc::RateGroupDriver rateGroupDriverComp(
-        FW_OPTIONAL_NAME("rateGroupDriverComp"),
+    
+    phase Fpp.ToCpp.Phases.configComponents """
+    rateGroupDriverComp.configure(
         ConfigObjects::rateGroupDriverComp::rgDivs,
         FW_NUM_ARRAY_ELEMENTS(ConfigObjects::rateGroupDriverComp::rgDivs)
     );
@@ -561,9 +553,9 @@ module GpsApp {
     instance fileManager
     instance fileUplink
     instance fileUplinkBufferManager
-    instance linuxTime
     instance GPS_SERIAL
     instance GPS
+    instance linuxTime
     instance prmDb
     instance rateGroup1Comp
     instance rateGroup2Comp
@@ -573,7 +565,6 @@ module GpsApp {
     instance systemResources
     instance textLogger
     instance uplink
-    
 
 
     # ----------------------------------------------------------------------
@@ -626,7 +617,6 @@ module GpsApp {
       rateGroup1Comp.RateGroupMemberOut[0] -> chanTlm.Run
       rateGroup1Comp.RateGroupMemberOut[1] -> fileDownlink.Run
       rateGroup1Comp.RateGroupMemberOut[2] -> systemResources.run
-      rateGroup1Comp.RateGroupMemberOut[3] -> uplink.schedIn
 
       # Rate group 2
       rateGroupDriverComp.CycleOut[Ports_RateGroups.rateGroup2] -> rateGroup2Comp.CycleIn
@@ -682,17 +672,10 @@ Open the `GpsAppTopologyDefs.hpp` file and fill in the following content:
 
 #include "Drv/BlockDriver/BlockDriver.hpp"
 #include "Fw/Types/MallocAllocator.hpp"
-#include "Fw/Logger/Logger.hpp"
 #include "GpsApp/Top/FppConstantsAc.hpp"
 #include "Svc/FramingProtocol/FprimeProtocol.hpp"
 
 namespace GpsApp {
-
-  // Declare the block driver here so it is visible in main
-  extern Drv::BlockDriver blockDrv;
-  
-  // Declare the Linux timer here so it is visible in main
-  //extern Svc::LinuxTimer linuxTimer;
 
   namespace Allocation {
 
@@ -743,11 +726,11 @@ namespace GpsApp {
     namespace fileDownlink { enum { WARN = 3, FATAL = 5 }; }
     namespace fileManager { enum { WARN = 3, FATAL = 5 }; }
     namespace fileUplink { enum { WARN = 3, FATAL = 5 }; }
+    namespace GPS { enum { WARN = 3, FATAL = 5 }; }
     namespace prmDb { enum { WARN = 3, FATAL = 5 }; }
     namespace rateGroup1Comp { enum { WARN = 3, FATAL = 5 }; }
     namespace rateGroup2Comp { enum { WARN = 3, FATAL = 5 }; }
     namespace rateGroup3Comp { enum { WARN = 3, FATAL = 5 }; }
-    namespace GPS { enum { WARN = 3, FATAL = 5 }; }
   }
 
 }
@@ -755,7 +738,7 @@ namespace GpsApp {
 #endif
 ```
 
-TODO - discussion
+Note that we've updated the `TopologyState` structure to accept a "device"- we will use this to pass in the name of the serial port to use.
 
 **Complete the GpsAppTopologyDefs.cpp file:**
 Open the `GpsAppTopologyDefs.cpp` file and fill in the following content:
@@ -764,21 +747,19 @@ Open the `GpsAppTopologyDefs.cpp` file and fill in the following content:
 
 namespace GpsApp {
 
-  namespace Allocation {
-
-    Fw::MallocAllocator mallocator;
-
-  }
+    namespace Allocation {
+  
+      Fw::MallocAllocator mallocator;
+  
+    }
 
     namespace Init {
 
-    bool status = true;
-
+        bool status = true;
+    
+    }
+  
   }
-
-  Drv::BlockDriver blockDrv(FW_OPTIONAL_NAME("blockDrv"));
-
-}
 ```
 
 TODO - discussion
@@ -805,11 +786,10 @@ GpsApp::TopologyState state;
 // Enable the console logging provided by Os::Log
 Os::Log logger;
 
+// Set 'terminate' flag
 volatile sig_atomic_t terminate = 0;
 
-// Handle a signal, e.g. control-C
 static void sighandler(int signum) {
-    // Call the teardown function
     GpsApp::teardown(state);
     terminate = 1;
 }
@@ -839,9 +819,8 @@ int main(int argc, char* argv[]) {
     char *device;
     option = 0;
     hostname = nullptr;
-    device = nullptr;
 
-    while ((option = getopt(argc, argv, "hp:a:d:")) != -1){
+    while ((option = getopt(argc, argv, "hp:a:")) != -1){
         switch(option) {
             case 'h':
                 print_usage(argv[0]);
@@ -868,24 +847,23 @@ int main(int argc, char* argv[]) {
     (void) printf("Hit Ctrl-C to quit\n");
 
     // run setup
-    state = GpsApp::TopologyState(hostname, port_number,device);
+    state = GpsApp::TopologyState(hostname, port_number);
     GpsApp::setup(state);
 
     // register signal handlers to exit program
     signal(SIGINT,sighandler);
     signal(SIGTERM,sighandler);
-
+    
     // run block driver timer
     int cycle = 0;
+
     while (!terminate) {
-      // (void) printf("Cycle %d\n",cycle);
+        //(void) printf("Cycle %d\n",cycle);
         runcycles(1);
         cycle++;
     }
-    
-    // Signal handler was called, and block driver quit.
-    // Time to exit the program.
-    // Give time for threads to exit.
+
+    // Give time for threads to exit before shutdown
     (void) printf("Waiting for threads...\n");
     Os::Task::delay(1000);
 
