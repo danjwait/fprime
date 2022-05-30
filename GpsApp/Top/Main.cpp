@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
     option = 0;
     hostname = nullptr;
 
-    while ((option = getopt(argc, argv, "hp:a:")) != -1){
+    while ((option = getopt(argc, argv, "hp:a:d:")) != -1){
         switch(option) {
             case 'h':
                 print_usage(argv[0]);
@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
     (void) printf("Hit Ctrl-C to quit\n");
 
     // run setup
-    state = GpsApp::TopologyState(hostname, port_number);
+    state = GpsApp::TopologyState(hostname, port_number, device);
     GpsApp::setup(state);
 
     // register signal handlers to exit program
