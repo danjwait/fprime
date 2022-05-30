@@ -529,7 +529,51 @@ The Gps component is included as an Active component:
     stack size Default.stackSize \
     priority 80
 ```
-The priority is set [OS-dependent]([url](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Components_Port-Instances_Priority)); for the Raspian OS
+The priority is set [OS-dependent]([url](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Components_Port-Instances_Priority)); for the [Raspberry Pi OS]([url](https://www.raspberrypi.com/documentation/computers/os.html)) the max level is 100 (TODO - reference for this?); an architecture discussion should address the priority levels avaialbe on your target and the priorities for the task. We've just picked 80 here.
+
+The serial interface driver is included as a Passive component:
+```
+  instance GPS_SERIAL: Drv.LinuxSerialDriver base id 0x4C00 \
+  {
+    phase Fpp.ToCpp.Phases.configComponents  """
+    {
+    const bool status = GPS_SERIAL.open(
+      state.device,
+      Drv::LinuxSerialDriverComponentImpl::BAUD_9600,
+      Drv::LinuxSerialDriverComponentImpl::NO_FLOW,
+      Drv::LinuxSerialDriverComponentImpl::PARITY_NONE,
+      true
+    );
+    if (!status) {
+      Fw::Logger::logMsg("[ERROR] Could not open GPS UART: %s\\n", reinterpret_cast<POINTER_CAST>(state.device));
+      Init::status = false;
+      }
+    else {
+      Fw::Logger::logMsg("[INFO] Opened GPS UART driver: %s\\n", reinterpret_cast<POINTER_CAST>(state.device));
+      Init::status = true;
+    }
+    }
+    """
+    
+    phase Fpp.ToCpp.Phases.startTasks """
+    if (Init::status) {
+      GPS_SERIAL.startReadThread();
+    }
+    else {
+      Fw::Logger::logMsg("[ERROR] Initialization failed; not starting UART driver\\n");
+    }
+    """
+
+    phase Fpp.ToCpp.Phases.stopTasks """
+    GPS_SERIAL.quitReadThread();
+    """
+  }
+```
+Note that this instance definition is more involved than for the Gps component. The serial interface needs to be configured for buad rate, flow control, and parity. The [RPi application]([url](https://github.com/nasa/fprime/blob/devel/RPI/Top/instances.fpp#:~:text=base%20id%201900-,instance%20uartDrv%3A%20Drv.LinuxSerialDriver%20base%20id%202000%20%5C,%7D,-instance%20ledDrv%3A%20Drv)) is helpful to see an example of this and the [LinuxSerialDriverComponentImpl.hpp]([url](https://github.com/nasa/fprime/blob/devel/Drv/LinuxSerialDriver/LinuxSerialDriverComponentImpl.hpp)) contains additional details on the implimentation of these calls. The `phase Fpp.ToCpp.Phases` is a setting to direct the implimentation on which functions, with which parameters, to call. 
+
+So during the `configComponents` phase, the `open` funcition is called on the serial driver instance (`GPS_SERIAL` in this case) with the `state.device` passed into the `TopologyState` structure in the command line to start `Main.cpp` - so a different serial interface could be used and passed in at the command line. The baud rate, flow control, and parity though are hard-coded here. 
+
+During the `startTasks` pahse the `GPS_SERIAL` instance is directed to start the read thread, unless the serial port failed to open during the `configComponents` phase. During the `stopTasks` phase `GPS_SERIAL` is directed to quit that same read thread.
 
 **Complete the topology.fpp file:**
 Open the `topology.fpp` file and fill in the following content:
@@ -679,8 +723,15 @@ module GpsApp {
 
 }
 ```
-
-TODO - discussion
+The connections in `topology.fpp` are similar to those in the Ref applicaiton, with the Ref connections replaced with the Gps connections:
+```
+    connections Gps {
+      GPS_SERIAL.serialRecv -> GPS.serialRecv
+      GPS.serialBufferOut -> GPS_SERIAL.readBufferSend
+      GPS.serialWrite -> GPS_SERIAL.serialSend
+    }
+```
+The connections here include a buffer `GPS.serialBufferOut` provided by the `GPS` instance for the `GPS_SERIAL` instance to write into that the `GPS` instance will read from with the `GPS.serialRecv` port. Likewise to write into the GPS device there is a `GPS.serialWrite` port to send data to the device across the serial interface.
 
 **Complete the GpsAppTopologyDefs.hpp file:**
 Open the `GpsAppTopologyDefs.hpp` file and fill in the following content:
@@ -756,8 +807,7 @@ namespace GpsApp {
 
 #endif
 ```
-
-Note that we've updated the `TopologyState` structure to accept a "device"- we will use this to pass in the name of the serial port to use.
+Note that we've updated the `TopologyState` structure to accept a "device"- we will use this to pass in the name of the serial port to use when we call `Main.cpp`
 
 **Complete the GpsAppTopologyDefs.cpp file:**
 Open the `GpsAppTopologyDefs.cpp` file and fill in the following content:
@@ -781,7 +831,6 @@ namespace GpsApp {
   }
 ```
 
-TODO - discussion
 
 **Complete the Main.cpp file:**
 Open the `Main.cpp` file and fill in the following content:
@@ -892,7 +941,7 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-`Main.cpp` as written takes command-line arguments at start that are used to create the `TopologyState` which is passed to `GpsApp::setup`. Note in this example the serial port used to communicate with the GPS device is passed in, as is the host IP address and port. It may be better for your application to set those values some other way, for example within `GpsAppTopologyDefs.hpp` or `instances.fpp`
+`Main.cpp` as written takes command-line arguments at start that are used to create the `TopologyState` which is passed to `GpsApp::setup`. Note in this example the serial port used to communicate with the GPS device is passed in with the `-d` option for `device`, as is the host IP address and port. It may be better for your application to set those values some other way, for example within `GpsAppTopologyDefs.hpp` or `instances.fpp` the way that the serial interface buad rate was set, for example.
 
 **Complete the CMakeLists.txt file:**
 Open the `CMakeLists.txt` file and fill in the following content:
