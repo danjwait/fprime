@@ -217,7 +217,7 @@ class GenFactory:
         Private Constructor (singleton pattern)
         """
         self.__instance = None
-        self.__configured_visitors = dict()
+        self.__configured_visitors = {}
 
     def getInstance():
         """
@@ -350,7 +350,7 @@ class GenFactory:
         """
         # Instance this list only once for all elements
         if self.__visitor_list is None:
-            self.__visitor_list = list()
+            self.__visitor_list = []
             #
             # Insert each of the code producer visitors into the list of
             # visitors. The visitor must be in the list of
