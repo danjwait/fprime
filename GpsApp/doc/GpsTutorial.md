@@ -26,7 +26,7 @@ We call out the above because these are tasks you really should be doing with yo
  - [MathComponent Tutorial](../MathComponent/Tutorial.md)
  - [CrossCompilation Tutorial](https://github.com/nasa/fprime/tree/devel/docs/Tutorials/CrossCompilation).
 
-As such, this tutorial builds on the prerequisites in those tutorials. Of note, the structure of this demo is closer to the Ref application and associated MathComponent tutorial to extend that structure than the structure used in the RPi applicaiton. This tutorial will make extensive use of the [FPP Users Guide](https://fprime-community.github.io/fpp/fpp-users-guide.html) as well, so please read through that and refer back to it as we go.
+As such, this tutorial builds on the prerequisites in those tutorials. Of note, the structure of this demo is closer to the Ref application and associated MathComponent tutorial to extend that structure than the structure used in the RPi application. This tutorial will make extensive use of the [FPP Users Guide](https://fprime-community.github.io/fpp/fpp-users-guide.html) as well, so please read through that and refer back to it as we go.
 
 We have written this guide making use of a [Raspberry Pi 4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) as the embedded target and the [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) as the connected device. Due to this being written during COVID times, we have not been able to procure let alone test alternate hardware sets. We do want to point out that both Raspberry Pi and Adafruit teams provide extensive documentation and support, so please consider supporting them as you work to learn embedded systems.
 
@@ -520,7 +520,7 @@ Working from the beginning of the file above, note that the instances are groupe
 
 This application continues to make use of the [blockDrv for timing]([url](https://github.com/nasa/fprime/blob/devel/Ref/Top/Main.cpp#:~:text=void%20run1cycle()%20%7B,%7D)) as used in the Ref application as opposed to [LinuxTimer]([url](https://github.com/nasa/fprime/blob/devel/RPI/Main.cpp#:~:text=//%20Start%20the,//!%3C%2010Hz)) used in the RPi application. Working with your team you will need to figure out how your system will generate a timing signal.
 
-This applicaiton maintains the three rate groups of the Ref application. These [rate groups]([url](https://nasa.github.io/fprime/UsersGuide/best/rate-group.html)) can be used to drive a set of one or more components at the rate for the group. 
+This application maintains the three rate groups of the Ref application. These [rate groups]([url](https://nasa.github.io/fprime/UsersGuide/best/rate-group.html)) can be used to drive a set of one or more components at the rate for the group. 
 
 The Gps component is included as an Active component:
 ```
@@ -529,7 +529,7 @@ The Gps component is included as an Active component:
     stack size Default.stackSize \
     priority 80
 ```
-The priority is set [OS-dependent]([url](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Components_Port-Instances_Priority)); for the [Raspberry Pi OS]([url](https://www.raspberrypi.com/documentation/computers/os.html)) the max level is 100 (TODO - reference for this?); an architecture discussion should address the priority levels avaialbe on your target and the priorities for the task. We've just picked 80 here.
+The priority is set [OS-dependent]([url](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Components_Port-Instances_Priority)); for the [Raspberry Pi OS]([url](https://www.raspberrypi.com/documentation/computers/os.html)) the max level is 100 (TODO - reference for this?); an architecture discussion should address the priority levels available on your target and the priorities for the task. We've just picked 80 here.
 
 The serial interface driver is included as a Passive component:
 ```
@@ -569,11 +569,11 @@ The serial interface driver is included as a Passive component:
     """
   }
 ```
-Note that this instance definition is more involved than for the Gps component. The serial interface needs to be configured for buad rate, flow control, and parity. The [RPi application]([url](https://github.com/nasa/fprime/blob/devel/RPI/Top/instances.fpp#:~:text=base%20id%201900-,instance%20uartDrv%3A%20Drv.LinuxSerialDriver%20base%20id%202000%20%5C,%7D,-instance%20ledDrv%3A%20Drv)) is helpful to see an example of this and the [LinuxSerialDriverComponentImpl.hpp]([url](https://github.com/nasa/fprime/blob/devel/Drv/LinuxSerialDriver/LinuxSerialDriverComponentImpl.hpp)) contains additional details on the implimentation of these calls. The `phase Fpp.ToCpp.Phases` is a setting to direct the implimentation on which functions, with which parameters, to call. 
+Note that this instance definition is more involved than for the Gps component. The serial interface needs to be configured for baud rate, flow control, and parity. The [RPi application]([url](https://github.com/nasa/fprime/blob/devel/RPI/Top/instances.fpp#:~:text=base%20id%201900-,instance%20uartDrv%3A%20Drv.LinuxSerialDriver%20base%20id%202000%20%5C,%7D,-instance%20ledDrv%3A%20Drv)) is helpful to see an example of this and the [LinuxSerialDriverComponentImpl.hpp]([url](https://github.com/nasa/fprime/blob/devel/Drv/LinuxSerialDriver/LinuxSerialDriverComponentImpl.hpp)) contains additional details on the implementation of these calls. The `phase Fpp.ToCpp.Phases` is a setting to direct the implementation on which functions, with which parameters, to call. 
 
-So during the `configComponents` phase, the `open` funcition is called on the serial driver instance (`GPS_SERIAL` in this case) with the `state.device` passed into the `TopologyState` structure in the command line to start `Main.cpp` - so a different serial interface could be used and passed in at the command line. The baud rate, flow control, and parity though are hard-coded here. 
+So during the `configComponents` phase, the `open` function is called on the serial driver instance (`GPS_SERIAL` in this case) with the `state.device` passed into the `TopologyState` structure in the command line to start `Main.cpp` - so a different serial interface could be used and passed in at the command line. The baud rate, flow control, and parity though are hard-coded here. 
 
-During the `startTasks` pahse the `GPS_SERIAL` instance is directed to start the read thread, unless the serial port failed to open during the `configComponents` phase. During the `stopTasks` phase `GPS_SERIAL` is directed to quit that same read thread.
+During the `startTasks` phase the `GPS_SERIAL` instance is directed to start the read thread, unless the serial port failed to open during the `configComponents` phase. During the `stopTasks` phase `GPS_SERIAL` is directed to quit that same read thread.
 
 **Complete the topology.fpp file:**
 Open the `topology.fpp` file and fill in the following content:
@@ -723,7 +723,7 @@ module GpsApp {
 
 }
 ```
-The connections in `topology.fpp` are similar to those in the Ref applicaiton, with the Ref connections replaced with the Gps connections:
+The connections in `topology.fpp` are similar to those in the Ref application, with the Ref connections replaced with the Gps connections:
 ```
     connections Gps {
       GPS_SERIAL.serialRecv -> GPS.serialRecv
@@ -942,7 +942,7 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-`Main.cpp` as written takes command-line arguments at start that are used to create the `TopologyState` which is passed to `GpsApp::setup`. Note in this example the serial port used to communicate with the GPS device is passed in with the `-d` option for `device`, as is the host IP address and port. It may be better for your application to set those values some other way, for example within `GpsAppTopologyDefs.hpp` or `instances.fpp` the way that the serial interface buad rate was set, for example.
+`Main.cpp` as written takes command-line arguments at start that are used to create the `TopologyState` which is passed to `GpsApp::setup`. Note in this example the serial port used to communicate with the GPS device is passed in with the `-d` option for `device`, as is the host IP address and port. It may be better for your application to set those values some other way, for example within `GpsAppTopologyDefs.hpp` or `instances.fpp` the way that the serial interface baud rate was set, for example.
 
 ### Complete the CMakeLists.txt for the Topology
 Open the `CMakeLists.txt` file and fill in the following content:
