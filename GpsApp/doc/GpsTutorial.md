@@ -4,16 +4,18 @@
 
 This tutorial is intended to help you extend your F' development capabilities from the [MathComponent](https://github.com/nasa/fprime/tree/devel/docs/Tutorials/MathComponent) and [CrossCompilation](https://github.com/nasa/fprime/tree/devel/docs/Tutorials/CrossCompilation) and serve as some background for the [RPI demo](https://github.com/nasa/fprime/tree/devel/RPI). 
 
-Specifically this tutorial will employ some of the provided F' components to use the data bus on an embedded target to connect another device to the target in order to start building a complete embedded system. In this case we will use a GPS device, connected over UART, to a Raspberry Pi running F' on a Linux-based OS. This will be following the Application-Manager-Driver pattern described in the [F' Users Guide](https://nasa.github.io/fprime/UsersGuide/best/app-man-drv.html) with our Gps component being the GPS device "Manager" in that pattern.
+Specifically this tutorial will employ some of the provided F' components to use a data bus on an embedded target to connect another device to the target in order to start building a complete embedded system. In this case we will use a GPS device, connected over UART, to a Raspberry Pi running F' on a Linux-based OS. This will be following the Application-Manager-Driver pattern described in the [F' Users Guide](https://nasa.github.io/fprime/UsersGuide/best/app-man-drv.html) with our Gps component being the GPS device "Manager" and the LinuxSerialDriver being the "Driver" in that pattern
 
-This tutorial will also cover some aspects of the topology development. This process with include things like working with the `Main.cpp` file to build a TopologyState to include the GPS device, configuring components in the `instances.fpp` file, and using the `include <file>.fppi` approach to break up some of the files into smaller more focused parts. In order this tutorial will walk through:
+This tutorial will also cover some aspects of the topology development. This process with include things like working with the `Main.cpp` file to build a TopologyState to include the GPS device, configuring components in the `instances.fpp` file, and using the `include <file>.fppi` approach to break up some of the files into smaller more focused parts. 
+
+In order this tutorial will walk through:
  - Setting up the directory structure and topology files
  - Developing a Gps component
  - Building and running the GpsApp
 
 Before diving in we should point out what this tutorial *is not* so that you understand the other tasks that you will need to work as you develop your own embedded system using the F' architecture and framework. This tutorial is not:
  - A GPS or GNSS tutorial; we will not cover how to use a GNSS/GPS device as part of your system. In particular we will not develop navigation or timing functions from the GPS device.
- - A systems architecture tutorial; we will not cover how to develop a set of requirements on what your system will need to do, allocate those functions to components, and then laying out those components into a topology with ports and types. 
+ - A systems architecture tutorial; we will not cover how to develop a set of requirements on what your embedded system will need to do, allocate those functions to components, and then laying out those components into a topology with ports and types. 
  - A coding style or software system development guide. This tutorial has been developed by the community and as such does not strictly follow the JPL styles used in the JPL-developed tutorials. 
  - This tutorial will also not address development techniques like configuration management, file naming/location, or unit test practices.
 
@@ -24,7 +26,7 @@ We call out the above because these are tasks you really should be doing with yo
  - [MathComponent Tutorial](../MathComponent/Tutorial.md)
  - [CrossCompilation Tutorial](https://github.com/nasa/fprime/tree/devel/docs/Tutorials/CrossCompilation).
 
-As such, this tutorial builds on the prerequisites in those tutorials. Of note, the structure of this demo is closer to the /Ref and MathComponent tutorial than the /RPi This tutorial will make extensive use of the [FPP Users Guide](https://fprime-community.github.io/fpp/fpp-users-guide.html) as well, so please read through that and refer back to it as we go.
+As such, this tutorial builds on the prerequisites in those tutorials. Of note, the structure of this demo is closer to the Ref application and associated MathComponent tutorial to extend that structure than the structure used in the RPi applicaiton. This tutorial will make extensive use of the [FPP Users Guide](https://fprime-community.github.io/fpp/fpp-users-guide.html) as well, so please read through that and refer back to it as we go.
 
 We have written this guide making use of a [Raspberry Pi 4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) as the embedded target and the [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) as the connected device. Due to this being written during COVID times, we have not been able to procure let alone test alternate hardware sets. We do want to point out that both Raspberry Pi and Adafruit teams provide extensive documentation and support, so please consider supporting them as you work to learn embedded systems.
 
@@ -37,14 +39,16 @@ git checkout -b GpsApp v3.0.0
 ```
 If you wish, you can save your work by committing to this branch.
 
-## Setup the Application Directory Structure
+## Setup the Application Structure
 
-**Create the GpsApp, Top, and Gps directories:**
-Go to the `fprime` directory at the top of the repository branch and run `mkdir GpsApp` to create the directory for the GpsApp deployment (this is following the pattern with the `/Ref` application, with `/GpsApp` in place of `/Ref`). Change into that directory (`cd GpsApp`) and then create the directory for the topology (`mkdir Top`) and the Gps component (`mkdir Gps`). The `Top` directory will contain the topology information for the application "GpsApp" and the `GpsApp/Gps` directory will contain the files for your GPS device.
+### Create the GpsApp, Top, and Gps directories
+From the `fprime` directory at the top of the repository branch and run `mkdir GpsApp` to create the directory for the GpsApp application (this is following the pattern with the `/Ref` application, with `/GpsApp` in place of `/Ref`). Change into that directory (`cd GpsApp`) and then create the directory for the topology (`mkdir Top`) and the Gps component (`mkdir Gps`). 
+
+The `Top` directory will contain the topology information for the application "GpsApp" and the `GpsApp/Gps` directory will contain the files for your GPS device.
 
 Within the topology we can and will refer to other components in directories outside the `GpsApp` directory, as with the previous tutorials. This would be a good discussion with your team, as to how you want to structure the directories for multi-purpose components vs application-specific directories.
 
-## Create the top-level CMakeLists.txt
+### Create the top-level CMakeLists.txt
 In the `/GpsApp` directory (not in `/GpsApp/Top` or `/GpsApp/Gps`) create a file `CMakeLists.txt` with the following content:
 ```
 ####
@@ -113,28 +117,29 @@ target_compile_options("${PROJECT_NAME}" PUBLIC -Wno-unused-parameter)
 target_compile_options("${PROJECT_NAME}" PUBLIC -Wundef)
 set_property(TARGET "${PROJECT_NAME}" PROPERTY CXX_STANDARD 11)
 ```
-Note that the top-level `CMakeLists.txt` covers the name of the application (`project(GpsApp VERSION 1.0.0 LANGUAGES C CXX)`), the import of the F' core, and then includes the path to any component subdirectories. In this case we'll include just the Gps component we will develop:
+Note that the top-level `CMakeLists.txt` covers the name of the application (`project(GpsApp VERSION 1.0.0 LANGUAGES C CXX)`), the import of the F' core, and then includes the path to any component subdirectories. 
+
+In this case we'll include just the Gps component we will develop:
 ```
 # Add component subdirectories
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Gps/")
-
 ```
-where the /Ref application had additional components (E.G. `("${CMAKE_CURRENT_LIST_DIR}/PingReceiver/")`)  from within the `/Ref` directory. If you want to add other components, this would be a place to include those. Note that you can change the file paths to include other components not within the /GpsApp directory; for example if we wanted the `PingReceiver` from /Ref, we would add `("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")`. 
+where the /Ref application had additional components (E.G. `("${CMAKE_CURRENT_LIST_DIR}/PingReceiver/")`)  from within the `/Ref` directory. If you want to add other components, this would be a place to include those. Note that you can change the file paths to include other components not within the /GpsApp directory; for example if we wanted the `PingReceiver` from /Ref, we would add `("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")` or if you wanted one directory for all sensor device components you could do something like `("${CMAKE_CURRENT_LIST_DIR}/../Sensors/IMU/")`
 
 Note that the top-level `CMakeLists.txt` also sets the path to the topology and the `Main.cpp` file (within the `/GpsApp/Top` directory, in this case).
 
-## Create the GpsApp Topology
+### Create the GpsApp Topology
 This tutorial will walk through some more steps involved in working with the application topology within the `/GpsApp/Top` directory. The steps are:
  - Define and create the FPP models for the topology (instances.fpp and topology.fpp)
  - Create the Main.cpp file
  - Create the TopologyDefs.hpp and TopologyDefs.cpp files
  - Create the `CMakeList.txt` file for the topology
 
-### Construct the Topology FPP Model
+#### Construct the Topology FPP Model
 **Create the FPP model files:**
 In the `GpsApp/Top` directory create a set of files:
  - `instances.fpp` : this will define the list of [component instances](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Component-Instances) and their names in the application
- - `topology.fpp` : this will define the [relationships between the component](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Topologies) 
+ - `topology.fpp` : this will define the [relationships between the components](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Topologies) given in the `instances.fpp` file
  - `GpsAppTopologyDefs.hpp` and `GpsAppTopologyDefs.cpp` : these contain definitions used through the topology
  - `Main.cpp` : this will setup and run the application on the target
  - `CMakeLists.txt` : this is the CMake instructions for the topology
@@ -511,7 +516,20 @@ module GpsApp {
 }
 ```
 
-TODO - discussion
+Working from the beginning of the file above, note that the instances are grouped into Active, Queued, and Passive component instances per [Defining Components]([url](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Components)) in the FPP Users Guide.
+
+This application continues to make use of the [blockDrv for timing]([url](https://github.com/nasa/fprime/blob/devel/Ref/Top/Main.cpp#:~:text=void%20run1cycle()%20%7B,%7D)) as used in the Ref application as opposed to [LinuxTimer]([url](https://github.com/nasa/fprime/blob/devel/RPI/Main.cpp#:~:text=//%20Start%20the,//!%3C%2010Hz)) used in the RPi application. Working with your team you will need to figure out how your system will generate a timing signal.
+
+This applicaiton maintains the three rate groups of the Ref application. These [rate groups]([url](https://nasa.github.io/fprime/UsersGuide/best/rate-group.html)) can be used to drive a set of one or more components at the rate for the group. 
+
+The Gps component is included as an Active component:
+```
+  instance GPS: GpsApp.Gps base id 0x0F00 \
+    queue size Default.queueSize \
+    stack size Default.stackSize \
+    priority 80
+```
+The priority is set [OS-dependent]([url](https://fprime-community.github.io/fpp/fpp-users-guide.html#Defining-Components_Port-Instances_Priority)); for the Raspian OS
 
 **Complete the topology.fpp file:**
 Open the `topology.fpp` file and fill in the following content:
