@@ -47,6 +47,7 @@ add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/SubSys_Eps/")
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/SubSys_Gnc/")
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/SubSys_Mech/")
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/SubSys_Thrm/")
+add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/SubSys_Payload/")
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/SubSys_Devices/")
 
 # Add Topology subdirectory

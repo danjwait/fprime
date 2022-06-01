@@ -174,7 +174,7 @@ module mHST {
 
   }
 
-  instance GPS: GpsApp.Gps base id 0x0F00 \
+  instance GPS: mHST.SubSys_Devices.Gps base id 0x0F00 \
     queue size Default.queueSize \
     stack size Default.stackSize \
     priority 80
