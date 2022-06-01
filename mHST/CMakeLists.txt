@@ -20,7 +20,7 @@
 ##
 cmake_minimum_required(VERSION 3.13)
 cmake_policy(SET CMP0048 NEW)
-project(mSHT VERSION 1.0.0 LANGUAGES C CXX)
+project(mHST VERSION 1.0.0 LANGUAGES C CXX)
 
 ##
 # Section 2: F prime Core
