@@ -210,6 +210,7 @@ module GpsApp {
   @ Communications driver. May be swapped with other comm drivers like UART
   @ Note: Here we have TCP reliable uplink and UDP (low latency) downlink
   instance comm: Drv.ByteStreamDriverModel base id 0x4000 \
+    type "Drv::TcpClient" \
     at "../../Drv/TcpClient/TcpClient.hpp" \
   {
 
@@ -295,6 +296,7 @@ module GpsApp {
   }
 
   instance linuxTime: Svc.Time base id 0x4500 \
+    type "Svc::LinuxTime" \
     at "../../Svc/LinuxTime/LinuxTime.hpp" \
   {
     phase Fpp.ToCpp.Phases.instances """
