@@ -14,6 +14,6 @@ namespace GpsApp {
     
     }
   
-    Drv::BlockDriver blockDrv(FW_OPTIONAL_NAME("blockDrv"));
+
 
   }
