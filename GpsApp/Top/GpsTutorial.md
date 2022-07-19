@@ -31,12 +31,12 @@ As such, this tutorial builds on the prerequisites in those tutorials. Of note, 
 
 We have written this guide making use of a [Raspberry Pi 4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) as the embedded target and the [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) as the connected device. Due to this being written during COVID times, we have not been able to procure let alone test alternate hardware sets. We do want to point out that both Raspberry Pi and Adafruit teams provide extensive documentation and support, so please consider supporting them as you work to learn embedded systems.
 
-**F´ Version:** This tutorial is designed to work with release `v3.0.0`.
+**F´ Version:** This tutorial is designed to work with release `v3.1.0`.
 
 Working on this tutorial will modify some files under version control in the F' git repository. Therefore it is a good idea to do this work on a new branch. For example:
 
 ```bash
-git checkout -b GpsApp v3.0.0
+git checkout -b GpsApp v3.1.0
 ```
 If you wish, you can save your work by committing to this branch.
 
@@ -125,7 +125,7 @@ In this case we'll include just the Gps component we will develop:
 # Add component subdirectories
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Gps/")
 ```
-where the /Ref application had additional components (E.G. `("${CMAKE_CURRENT_LIST_DIR}/PingReceiver/")`)  from within the `/Ref` directory. If you want to add other components, this would be a place to include those. Note that you can change the file paths to include other components not within the /GpsApp directory; for example if we wanted the `PingReceiver` from /Ref, we would add `("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")` or if you wanted one directory for all sensor device components you could do something like `("${CMAKE_CURRENT_LIST_DIR}/../Sensors/IMU/")`
+which follows the pattern where the /Ref application had additional components (E.G. `("${CMAKE_CURRENT_LIST_DIR}/PingReceiver/")`)  from within the `/Ref` directory. If you want to add other components, this would be a place to include those. Note that you can change the file paths to include other components not within the /GpsApp directory; for example if we wanted the `PingReceiver` from /Ref, we would add `("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")` or if you wanted one directory for all sensor device components you could do something like `("${CMAKE_CURRENT_LIST_DIR}/../Sensors/IMU/")`
 
 Note that the top-level `CMakeLists.txt` also sets the path to the topology and the `Main.cpp` file (within the `/GpsApp/Top` directory, in this case).
 
