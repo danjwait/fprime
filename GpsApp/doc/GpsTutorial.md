@@ -1142,10 +1142,12 @@ set(SOURCE_FILES
 register_fprime_module()
 ```
 
-Before moving to the next step, in the /GpsApp/Gps directory, make an empty file Gps.cpp
+Before moving to the next step, in the /GpsApp/Gps directory, make an empty file Gps.cpp (DJW TODO- still needed?)
 
 ### Implement the Model Files
 In `/GpsApp` directory run `fprime-util generate` to generate the build cache files for the native system, and then `fprime-util generate raspberrypi` for the Raspberry Pi. 
+
+Note that I will keep making both native and Raspberry Pi versions as I go; the GPS device I am using is only connected to the RPi (not my host machine). But my habit is to build both for native and target; it's a hook for adding unit tests on the host machine, and/or building for a software sim deployment as well as testing on the target. Please think this process through with your team as you go.
 
 Change into the `/GpsApp/Gps` component directory and run the implementation command `fprime-util impl` to create the stub implementation of the Gps component. There should be two new files in the `/GpsApp/Gps` directory:
  - `GpsComponentImpl.hpp-template`
