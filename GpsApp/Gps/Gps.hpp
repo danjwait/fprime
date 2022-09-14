@@ -117,7 +117,8 @@ namespace GpsApp {
           const FwOpcodeType opCode, /*!< The opcode*/
           const U32 cmdSeq /*!< The command sequence number*/
       );
-    
+
+
       // ----------------------------------------------------------------------
       // Additional member functions & variables
       // ----------------------------------------------------------------------
@@ -133,7 +134,6 @@ namespace GpsApp {
       Fw::Buffer m_recvBuffers[NUM_UART_BUFFERS];
       BYTE m_uartBuffers[NUM_UART_BUFFERS][UART_READ_BUFF_SIZE];
       char m_holder[UART_READ_BUFF_SIZE];
-
 
     };
 

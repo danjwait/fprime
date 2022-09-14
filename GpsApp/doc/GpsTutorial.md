@@ -1,4 +1,5 @@
 # F' GPS Tutorial
+## Work in Progress F' 3.1.0 update
 
 ## Introduction
 
@@ -30,12 +31,12 @@ As such, this tutorial builds on the prerequisites in those tutorials. Of note, 
 
 We have written this guide making use of a [Raspberry Pi 4](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) as the embedded target and the [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) as the connected device. Due to this being written during COVID times, we have not been able to procure let alone test alternate hardware sets. We do want to point out that both Raspberry Pi and Adafruit teams provide extensive documentation and support, so please consider supporting them as you work to learn embedded systems.
 
-**F´ Version:** This tutorial is designed to work with release `v3.0.0`.
+**F´ Version:** This tutorial is designed to work with release `v3.1.0`.
 
 Working on this tutorial will modify some files under version control in the F' git repository. Therefore it is a good idea to do this work on a new branch. For example:
 
 ```bash
-git checkout -b GpsApp v3.0.0
+git checkout -b GpsApp v3.1.0
 ```
 If you wish, you can save your work by committing to this branch.
 
@@ -124,7 +125,7 @@ In this case we'll include just the Gps component we will develop:
 # Add component subdirectories
 add_fprime_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Gps/")
 ```
-where the /Ref application had additional components (E.G. `("${CMAKE_CURRENT_LIST_DIR}/PingReceiver/")`)  from within the `/Ref` directory. If you want to add other components, this would be a place to include those. Note that you can change the file paths to include other components not within the /GpsApp directory; for example if we wanted the `PingReceiver` from /Ref, we would add `("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")` or if you wanted one directory for all sensor device components you could do something like `("${CMAKE_CURRENT_LIST_DIR}/../Sensors/IMU/")`
+which follows the pattern where the /Ref application had additional components (E.G. `("${CMAKE_CURRENT_LIST_DIR}/PingReceiver/")`)  from within the `/Ref` directory. If you want to add other components, this would be a place to include those. Note that you can change the file paths to include other components not within the /GpsApp directory; for example if we wanted the `PingReceiver` from /Ref, we would add `("${CMAKE_CURRENT_LIST_DIR}/../Ref/PingReceiver/")` or if you wanted one directory for all sensor device components you could do something like `("${CMAKE_CURRENT_LIST_DIR}/../Sensors/IMU/")`
 
 Note that the top-level `CMakeLists.txt` also sets the path to the topology and the `Main.cpp` file (within the `/GpsApp/Top` directory, in this case).
 
@@ -177,12 +178,11 @@ module GpsApp {
   {
 
     phase Fpp.ToCpp.Phases.configObjects """
-    NATIVE_UINT_TYPE context[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    NATIVE_INT_TYPE context[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     """
 
-    phase Fpp.ToCpp.Phases.instances """
-    Svc::ActiveRateGroup rateGroup1Comp(
-        FW_OPTIONAL_NAME("rateGroup1Comp"),
+    phase Fpp.ToCpp.Phases.configComponents """
+    rateGroup1Comp.configure(
         ConfigObjects::rateGroup1Comp::context,
         FW_NUM_ARRAY_ELEMENTS(ConfigObjects::rateGroup1Comp::context)
     );
@@ -197,12 +197,11 @@ module GpsApp {
   {
 
     phase Fpp.ToCpp.Phases.configObjects """
-    NATIVE_UINT_TYPE context[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    NATIVE_INT_TYPE context[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     """
 
-    phase Fpp.ToCpp.Phases.instances """
-    Svc::ActiveRateGroup rateGroup2Comp(
-        FW_OPTIONAL_NAME("rateGroup2Comp"),
+    phase Fpp.ToCpp.Phases.configComponents """
+    rateGroup2Comp.configure(
         ConfigObjects::rateGroup2Comp::context,
         FW_NUM_ARRAY_ELEMENTS(ConfigObjects::rateGroup2Comp::context)
     );
@@ -217,12 +216,11 @@ module GpsApp {
   {
 
     phase Fpp.ToCpp.Phases.configObjects """
-    NATIVE_UINT_TYPE context[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    NATIVE_INT_TYPE context[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     """
 
-    phase Fpp.ToCpp.Phases.instances """
-    Svc::ActiveRateGroup rateGroup3Comp(
-        FW_OPTIONAL_NAME("rateGroup3Comp"),
+    phase Fpp.ToCpp.Phases.configComponents """
+    rateGroup3Comp.configure(
         ConfigObjects::rateGroup3Comp::context,
         FW_NUM_ARRAY_ELEMENTS(ConfigObjects::rateGroup3Comp::context)
     );
@@ -1141,10 +1139,12 @@ set(SOURCE_FILES
 register_fprime_module()
 ```
 
-Before moving to the next step, in the /GpsApp/Gps directory, make an empty file Gps.cpp
+Before moving to the next step, in the /GpsApp/Gps directory, make an empty file Gps.cpp (DJW TODO- still needed?)
 
 ### Implement the Model Files
 In `/GpsApp` directory run `fprime-util generate` to generate the build cache files for the native system, and then `fprime-util generate raspberrypi` for the Raspberry Pi. 
+
+Note that I will keep making both native and Raspberry Pi versions as I go; the GPS device I am using is only connected to the RPi (not my host machine). But my habit is to build both for native and target; it's a hook for adding unit tests on the host machine, and/or building for a software sim deployment as well as testing on the target. Please think this process through with your team as you go.
 
 Change into the `/GpsApp/Gps` component directory and run the implementation command `fprime-util impl` to create the stub implementation of the Gps component. There should be two new files in the `/GpsApp/Gps` directory:
  - `GpsComponentImpl.hpp-template`
@@ -1331,10 +1331,12 @@ namespace GpsApp {
 } // end namespace GpsApp
 ```
 
-### Complete the Gps Implimentation
-Now we will have to fill in the code that is stubbed out in the stub files. Look for the `// TODO` comments in the autogenerated files.
+Note the `TODO` lines in Gps.cpp; we have to fill in those sections. 
 
-Open the `Gps.hpp` file and add the #defines and the contents for `struct GpsPacket` and the contents in `Additional member functions & variables`:
+### Complete the Gps Implimentation
+Now we will have to fill in the code that is stubbed out in the stub files. Look for the `// TODO` comments in the autogenerated Gps.fpp file. The Gps.hpp does not have any `TODO` lines, but we will have to add code the Gps.hpp in support of completing the Gps.cpp file.
+
+Open the `Gps.hpp` file and add the `#defines`, the section for `Types` with the contents for `struct GpsPacket` and the contents in  the section `Additional member functions & variables`:
 ```c++
 // ======================================================================
 // \title  Gps.hpp
@@ -1478,13 +1480,13 @@ namespace GpsApp {
 
 #endif
 ```
-The autocoding sets up the Gps.hpp file; we only needed to add those sections that we will need to use in the definitions in the Gps.cpp file.
+The autocoding sets up the Gps.hpp file for us based on the .fpp and .fppi files; we only needed to add those sections that we will need to use in the definitions in the Gps.cpp file.
 
-We've defined a single data structure, `GpsPacket` that our Gps component will fill in with data as it parses the data from the GPS device passed over the serial interface.
+In `Types` we've defined a single data structure, `GpsPacket` that our Gps component will fill in with data as it parses the data from the GPS device passed over the serial interface.
 
-The `preamble()` is called on start to setup the buffers used to pass data from the serial component to the Gps component. We also define a member variable `m_locked` that is used to capture if the GPS device has reported it is locked on the GPS constellation.
+In `Additional memer functions & variables` the `preamble()` is called on start to setup the buffers used to pass data from the serial component to the Gps component. The buffers are setup in this section as well. We also define a member variable `m_locked` that is used to capture if the GPS device has reported it is locked on the GPS constellation.
 
-Open the `Gps.cpp` file and add the following contents where you see the `// TODO` entries:
+Open the `Gps.cpp` file and add the following contents; the additonal `#includes` , the change to the `Gps()` constructor, add the `preamble()` function, and fill in where you see the `// TODO` entries (`serialRecv_handler` and the command handlers)
 ```c++
 // ======================================================================
 // \title  Gps.cpp
@@ -1775,9 +1777,9 @@ The majority of the work is in the handler implimentation as the data comes back
  - once there is enough data to contain the messages to parse, there is the set of parsers that look for the NEMA strings in the data ([NovAtel ref](https://docs.novatel.com/OEM7/Content/Logs/Core_Logs.htm?tocpath=Commands%20%2526%20Logs%7CLogs%7CGNSS%20Logs%7C_____0)) and put that data into the GpsPacket structure
  - once the data is parsed, send some of that data out as telemetry
 
-The `void Gps :: REPORT_STATUS_cmdHandler(...)` generates the event message on the lock status; this is useful to check that the component is running, since it won't generate telemetry without sucessful parsing of the serial data.
+The `void Gps :: REPORT_STATUS_cmdHandler(...)` generates the event message on the lock status; this is useful to check that the component is running, since it won't generate telemetry without sucessful parsing of the serial data. Note that this command is executed by the applicaiton on the target (the RPi in this demo), not the attached device (the GPS device)
 
-The `void Gps :: COLD_START_cmdHandler(...)` writes a given string out the serial interface to the GPS device to force the device to run the cold start routine, where it will start looking for GPS spacecraft with no existing knowledge.
+The `void Gps :: COLD_START_cmdHandler(...)` writes a given string out the serial interface to the GPS device to force the device to run the cold start routine, where it will start looking for GPS spacecraft with no existing knowledge. This is particular to the GPS device I am using; your GPS device data sheet should include the command you need to send across the serial interface for the GPS device to execute. 
 
 With the completed code, re-run the build commands:
 ```

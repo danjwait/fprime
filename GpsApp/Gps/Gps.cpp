@@ -7,7 +7,6 @@
 #include <ctype.h>
 #include <GpsApp/Gps/Gps.hpp>
 #include "Fw/Types/BasicTypes.hpp"
-#include "Fw/Types/BasicTypes.hpp"
 #include "Fw/Logger/Logger.hpp" 
 
 namespace GpsApp {
