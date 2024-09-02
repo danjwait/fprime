@@ -28,8 +28,12 @@ IF(NOT EXISTS "${RPI_TOOLCHAIN}")
 endif()
 message(STATUS "Using RPI toolchain at: ${RPI_TOOLCHAIN}")
 # specify the cross compiler
-set(CMAKE_C_COMPILER "${RPI_TOOLCHAIN}/arm-linux-gnueabihf-gcc")
-set(CMAKE_CXX_COMPILER "${RPI_TOOLCHAIN}/arm-linux-gnueabihf-g++")
+# for 32 bit OS
+#set(CMAKE_C_COMPILER "${RPI_TOOLCHAIN}/arm-linux-gnueabihf-gcc")
+#set(CMAKE_CXX_COMPILER "${RPI_TOOLCHAIN}/arm-linux-gnueabihf-g++")
+# for 64 bit OS
+set(CMAKE_C_COMPILER "${RPI_TOOLCHAIN}/aarch64-linux-gnu-gcc")
+set(CMAKE_CXX_COMPILER "${RPI_TOOLCHAIN}/aarch64-linux-gnu-g++")
 
 # where is the target environment
 set(CMAKE_FIND_ROOT_PATH  "${RPI_TOOLCHAIN}")
